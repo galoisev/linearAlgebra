@@ -15,7 +15,21 @@
 
 
 
+#include "../nodes.h"
+#include "../elements.h"
+#include "../mesh.h"
+#include "../geo.h"
+#include "../geo_old.h"
+#include "../viewfactor.h"
+#include "../array.h"
+#include "../entities.h"
+#include "../MatrixRotation.h"
+#include "../meshFormat.h"
+#include "../quantityOfHeatByRadiation.h"
+
+
 #include "array_class.h"
+#include "../numericalMethods.h"
 
 
 
@@ -601,10 +615,12 @@ int	main(void)
 	I.print("I");
 
 	std::cout << "\tI est-elle symetrique ? " << I.isSymetric() << "\n";
+	std::cout << "\tI.isDiagonal() = " << I.isDiagonal() << "\n";
 
 	J = J.ones();
 	J.print("J");
 	std::cout << "\tJ est-elle symetrique ? " << J.isSymetric() << "\n";
+	std::cout << "\tJ.isDiagonal() = " << J.isDiagonal() << "\n";
 
 
 
@@ -644,9 +660,7 @@ int	main(void)
 	int scalar = 2;
 	Matrix<int> MAT_A(2,2,1), MAT_B(2,2,2);
 	std::cout << MAT_A << "\n";
-	std::cout << MAT_B << "\n";
-	
-	
+	std::cout << MAT_B << "\n";	
 	
 
 	Matrix<int> result(2, 2, 7);
@@ -660,7 +674,7 @@ int	main(void)
 	Matrix<int> MAT_C = MAT_A * MAT_B;
 	MAT_C.print("MAT_C = ");*/
 
-	Matrix<int> MAT_D(3,2,6); 
+	Matrix<int> MAT_D(3, 2, 6);
 	MAT_D.setValue(2, 0, -5);
 	MAT_D.setValue(1, 1, -11);
 	MAT_D.print("MAT_D = ");
@@ -669,8 +683,88 @@ int	main(void)
 	MAT_D.print("tMAT_D = ");
 
 	Matrix<int> MAT_E(2,7,2); MAT_E.print("MAT_E = ");
+	std::cout << "\tD.isDiagonal() = " << D.isDiagonal() << "\n";
 
 
+	Matrix<dble>MAT_AA(3, 3, 0), MAT_AAA(2, 2, 0), MAT_AA_INV(3, 3, 0);
+	MAT_AA.setValue(0, 0, 10); MAT_AA.setValue(0, 1, 10); MAT_AA.setValue(0, 2, 11);
+	MAT_AA.setValue(1, 0, -6); MAT_AA.setValue(1, 1, 4); MAT_AA.setValue(1, 2, 7);
+	MAT_AA.setValue(2, 0, 3); MAT_AA.setValue(2, 1, -9); MAT_AA.setValue(2, 2, -5);
+	MAT_AA.print("MAT_AA = ");
+
+	std::cout << "\tMAT_AA.isDiagonal() = " << MAT_AA.isDiagonal() << "\n";
+
+
+
+
+	MAT_AAA = MAT_AAA.rowDeletion(MAT_AA, 1, 2);
+
+	MAT_AAA.print("MAT_AAA = ");
+	std:: cout << "\tdet(MAT_AA) = " << MAT_AA.det() << "\n\n\n";
+
+	//MAT_AA_INV = MAT_AA.operator/(MAT_AA.det());
+
+
+	MAT_AA_INV = MAT_AA.inv();
+	MAT_AA_INV.print("MAT_AA_INV = ");
+
+
+	Matrix<dble> MAT_DBLE_A(2, 2, 0), MAT_DBLE_A_INV(2, 2, 0), MAT_DBLE_A_norm(2, 2, 0);
+	MAT_DBLE_A.setValue(0, 0, 2); MAT_DBLE_A.setValue(0, 1, 3);
+	MAT_DBLE_A.setValue(1, 0,-1); MAT_DBLE_A.setValue(1, 1, 0);
+
+	std::cout << "\n\tMAT_DBLE_A\n";
+	std::cout << MAT_DBLE_A << "\n";
+
+	MAT_DBLE_A_INV = MAT_DBLE_A.inv();
+	std::cout << "\n\tMAT_DBLE_A_INV\n";
+	std::cout << MAT_DBLE_A_INV << "\n";
+
+	std::cout << "\tMAT_DBLE_A_INV.isDiagonal() = " << MAT_DBLE_A_INV.isDiagonal() << "\n";
+
+	std::cout << "\tMAT_DBLE_A.getElementMaxOf('r', 0) = " << MAT_DBLE_A.getElementMaxOf('r', 0) << "\n";
+	std::cout << "\tMAT_DBLE_A.getElementMaxOf('c', 1) = " << MAT_DBLE_A.getElementMaxOf('c', 0) << "\n";
+	
+	MAT_DBLE_A_norm = MAT_DBLE_A.renormalization();
+	MAT_DBLE_A_norm.print("MAT_DBLE_A_norm = ");
+	
+
+
+	std::cout << "\n\n\n";
+
+
+
+	Matrix<dble> MAT_DBLE_B = MAT_DBLE_A;
+	std::cout << "\n\tMAT_DBLE_B\n";
+	std::cout << MAT_DBLE_B << "\n";
+
+
+	/*
+	std::vector<Matrix<int>> v_MAT_INT_A;
+	std::fill(v_MAT_INT_A.begin(), v_MAT_INT_A.end(), std::rand());
+	*/
+
+	Matrix<int> MAT_INT_B(2, 6, std::rand()), MAT_INT_C(3, 4, 0), MAT_INT_D(1, 12, 0);
+	std::cout << MAT_INT_B<< "\n";
+
+	MAT_INT_B = MAT_INT_B.random();
+	MAT_INT_B.print("MAT_INT_B = ");
+
+	MAT_INT_C = MAT_INT_B.reshape(3, 4);
+	MAT_INT_C.print("MAT_INT_C = reshape(MAT_INT_B) = ");
+
+
+	MAT_INT_D = MAT_INT_B.reshape(1, 12);
+	MAT_INT_D.print("MAT_INT_D = reshape(MAT_INT_B) = ");
+
+
+
+
+
+
+	std::cout << "\n\n\n";
+
+	//std::cout << MAT_AAA << "\n";
 
 	
 	
@@ -679,6 +773,22 @@ int	main(void)
 	MAT_E = MAT_D * MAT_D;
 	MAT_F.print("MAT_C = ");*/
 	
+	
+
+
+
+
+
+
+	
+
+
+
+
+
+
+
+
 
 	std::cout << "\tFIN   test classe du fichier array_class.h " << "\n\n\n";
 
@@ -686,6 +796,593 @@ int	main(void)
 	std::system("PAUSE");
 	std::system("cls");
 	/***************************  FIN  *******************************/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	std::cout << "\n\n";
+	version = {" 2.0.0 "};
+	date    = { " 17/10/2025 " };
+	information = { " cargo tanks 2. " };
+	std::cout << "\t\t *** CALCUL de la MATRICE des FACTEURS de VUE  *** \n";
+	std::cout << "\n\n\t\tInformation: " << information << "\n";
+	std::cout << "\t\tVersion: " << version << "\n";
+	std::cout << "\t\tDate:    " << date << "\n\n";
+
+
+	std::system("PAUSE");
+	std::system("cls");
+	
+	
+	
+	
+	/*
+
+
+
+
+	pathname = { "C:/Users/jab/dev/cpp/projets/sloshing/data/" };
+	filename, fic = { "plan0_4t" }, ext = { ".geo" };
+	filename = pathname + fic + ext;
+	std::string filename_geo1 = filename;
+	geo_old[0].parsefile_geo(filename_geo1);
+
+	//int N1 = {};
+	//dble e1{}, T1{};
+
+	geo_old[0].surfaceNumber = 0;
+	N1 = geo_old[0].N;
+	e1 = geo_old[0].e;
+	T1 = geo_old[0].T;
+
+	std::cout << geo_old[0] << "\n";
+
+
+
+
+
+	pathname = { "C:/Users/jab/dev/cpp/projets/sloshing/data/" };
+	filename, fic = { "plan1_4t" }, ext = { ".geo" };
+	filename = pathname + fic + ext;
+	std::string filename_geo2 = filename;
+	geo_old[1].parsefile_geo(filename_geo2);
+
+	//int N2 = {};
+	//dble e2{}, T2{}, z{};
+
+	geo_old[1].surfaceNumber = 1;
+	N2 = geo_old[1].N;
+	e2 = geo_old[1].e;
+	T2 = geo_old[1].T;
+
+
+
+	std::cout << geo_old[1] << "\n";
+
+
+
+	std::system("PAUSE");
+	std::system("cls");
+	
+	
+	
+	
+	
+
+
+
+
+
+
+	std::cout << "\t\t / * CALCULS du FACTEUR de VUE * / \n";
+	std::this_thread::sleep_for(std::chrono::milliseconds(2000));  // Pause pour la simulation
+	std::system("cls");
+
+
+	
+
+
+	val_f12 = { 0.0 };
+
+	pathname = { "C:/Users/jab/dev/cpp/projets/sloshing/data/" };
+	filename, fic = { "plan0_4t" }, ext = { ".msh" };
+	filename = pathname + fic + ext;
+	std::string filename_gmsh1 = filename;
+
+	std::string message4 = { "\t\t\t'SURFACE 1' reading mesh file: IN PROGRESS..." };
+	GMSH::Mesh mesh1(filename_gmsh1);
+
+	double area1 = mesh1.area;
+	mesh1.hx = mesh1.area / N1; // 1.0 / mesh1.list_ptr_nodes.size();
+	mesh1.hy = mesh1.hx;
+
+	list_mesh.push_back(filename_gmsh1);
+
+
+
+
+	pathname = { "C:/Users/jab/dev/cpp/projets/sloshing/data/" };
+	filename, fic = { "plan1_4t" }, ext = { ".msh" };
+	filename = pathname + fic + ext;
+	std::string filename_gmsh2 = filename;
+
+
+
+	std::string message5 = { "\t\t\t'SURFACE 2' reading mesh file: IN PROGRESS..." };
+	GMSH::Mesh mesh2(filename_gmsh2);
+
+	double area2 = mesh2.area;
+	mesh2.hx = mesh2.area / N2;
+	mesh2.hy = mesh2.hx;
+
+	list_mesh.push_back(filename_gmsh2);
+
+
+	
+
+
+	std::string message1 = { "\t\t\t'view factor' computations: IN PROGRESS..." };
+
+
+	//GMSH::View_Factor f12;
+	
+	hx1 = { mesh1.hx }; hy1 = { mesh1.hy }; hx2 = { mesh2.hx }; hy2 = { mesh2.hy };
+	f12.area1 = mesh1.area;
+	f12.area2 = mesh2.area;
+	val_f12 = { 0.0 };
+	*/
+	/*
+
+
+
+	std::chrono::steady_clock::time_point begin_f12 = std::chrono::steady_clock::now();
+
+	val_f12 = f12.calculs2(mesh1.list_ptr_nodes_cg, mesh2.list_ptr_nodes_cg);
+	f12.value = val_f12 * (mesh1.area / mesh1.list_elements.size()) * (mesh2.area / mesh2.list_elements.size());
+	f12.emitterNumber = { 0 }; f12.receiverNumber = { 1 };
+	f12.numberOfElements1 = mesh1.num_total_elements;
+	f12.numberOfElements2 = mesh2.num_total_elements;
+
+
+	std::cout << f12 << "\n";
+
+
+	std::chrono::steady_clock::time_point end_f12 = std::chrono::steady_clock::now();
+	std::cout << "\n\n\t  Time duration (msec) " << (std::chrono::duration_cast<std::chrono::microseconds>(end_f12 - begin_f12).count()) / 1e3 << std::endl;
+
+
+
+	std::system("PAUSE");
+	std::system("cls");
+	
+	
+	*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	std::cout << "\n\n\t\tVIEW FACTOR calculations" << "\n\n\n\n";
+	std::this_thread::sleep_for(std::chrono::milliseconds(2000));  // Pause pour la simulation
+
+
+	std::system("cls");
+
+
+
+
+	pathname = { "C:/Users/jab/dev/cpp/projets/sloshing/data/geometries_GMSH/surfaces_reservoir_tank2/" };
+	std::vector<std::string> list_maillages;
+	std::string message = { "\t\t\t'view factor' computations: IN PROGRESS..." };
+	std::string folder;
+	int option = { 7 };
+
+	
+	switch (option) 
+	{
+	case 1:		
+		z = { 29.125 - 8.794 };
+		folder = { "cas1" };
+		break;
+	case 12:
+		z = { 29.125 - 7.694 };
+		folder = { "cas12" };
+		break;
+	case 2:
+		z = { 29.125 - 6.596 };
+		folder = { "cas2" };
+		break;
+	case 23:
+		z = { 29.125 - 5.496 };
+		folder = { "cas23" };
+		break;
+	case 3:
+		z = { 29.125 - 4.397 };
+		folder = { "cas3" };
+		break;
+	case 34:
+		z = { 29.125 - 3.297 };
+		folder = { "cas34" };
+		break;
+	case 4:
+		z = { 29.125 - 2.198 };
+		folder = { "cas4" };
+		break;
+	case 45:
+		z = { 29.125 - 1.099 };
+		folder = { "cas45" };
+		break;
+	case 5:
+		z = { 29.125 - 0.0005 };
+		folder = { "cas5" };
+		break;
+	case 6:
+		z = { 29.125 - 0.0 };
+		folder = { "cas6" };
+		break;
+	case 7:
+		z = { 29.125 - 4.397 };
+		folder = { "cas_spe" };
+		break;
+	default:
+		std::cout << "Option invalid !" << std::endl;
+		break;
+	}
+
+
+	std::cout << "\n\t\t*** INFORMATIONS ***" << "\n\n";
+	std::cout << "\t\t - fluid level in tank  : " << z << " m." << std::endl;
+	std::cout << "\t\t - tank fill percentage : " << (z/29.125)*100 << " %." << "\n\n\n";
+	std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+
+
+
+
+
+	pathname = pathname + "/" + folder + "/";
+	//list_maillages = { pathname + "surf0", pathname + "surf1" };
+	list_maillages = { pathname + "surf0", pathname + "surf1", pathname + "surf2", pathname + "surf3", pathname + "surf4", pathname + "surf5" };
+
+	
+
+	nbre_ligne = list_maillages.size();
+	matd_viewFactor MAT_VF(nbre_ligne, nbre_ligne), MAT_Q(nbre_ligne, nbre_ligne);
+
+
+
+	std::cout << "\n\tVIEW FACTOR calculations in PROGRESS..." << "\n\n\n";
+	GMSH::Geo geo_i, geo_j;
+
+
+	val_f12 = { 0.0 };
+	i = { 0 };
+	int k = { 0 };
+	for (auto m1 : list_maillages)
+	{
+
+		std::string m1_msh = m1 + ".msh";
+		std::string m1_geo = m1 + ".geo";
+
+
+		N1 = {}; e1 = {}; T1 = {}; Q_rad = {}; Q_rad.delta_time = 3600.0;
+		geo_i.parsefile_geo(m1_geo);
+
+		geo_i.surfaceNumber = i;
+		N1 = geo_i.N;
+		e1 = geo_i.e;
+		T1 = geo_i.T;
+
+
+		GMSH::Mesh mesh1(m1_msh);
+
+		f12.area1 = mesh1.area;
+		
+
+		//hx1 = { mesh1.hx }; hy1 = { mesh1.hy }; hx2 = { mesh2.hx }; hy2 = { mesh2.hy };
+		//f12.area1 = mesh1.area;
+
+
+		/*
+		Q_rad.Area_i = mesh1.area;
+		Q_rad.emissivity_i = e1;
+		Q_rad.T_i = T1;
+		*/
+
+
+
+		j = { 0 };
+		for (auto m2 : list_maillages)
+		{
+			/*
+			displayProgressBar(j, m2.size());//
+			std::this_thread::sleep_for(std::chrono::milliseconds(1500));  // Pause pour la simulation
+			*/
+			
+
+			std::string m2_msh = m2 + ".msh";
+			std::string m2_geo = m2 + ".geo";
+
+			N2 = {}; e2 = {}; T2 = {};
+			geo_j.parsefile_geo(m2_geo);
+
+			geo_j.surfaceNumber = j;
+			N2 = geo_j.N;
+			e2 = geo_j.e;
+			T2 = geo_j.T;
+
+
+			GMSH::Mesh mesh2(m2_msh);
+
+			f12.area2 = mesh2.area;
+
+			/*
+			Q_rad.Area_j = mesh2.area;
+			Q_rad.emissivity_j = e2;
+			Q_rad.T_i = T2;
+			*/
+
+
+			/*
+			int nombreDeMaillesTotaleALire = m1.size() * m2.size();
+			displayProgressBar(k, nombreDeMaillesTotaleALire, "READING MESH FILES in PROGRESS...");//
+			//std::this_thread::sleep_for(std::chrono::milliseconds(2000));  // Pause pour la simulation
+			*/
+
+			
+			
+
+			if (j != i)
+			{
+				val_f12 = f12.calculs2(mesh1.list_ptr_nodes_cg, mesh2.list_ptr_nodes_cg);
+				f12.value = val_f12 * (mesh1.area / mesh1.list_elements.size()) * (mesh2.area / mesh2.list_elements.size());
+				f12.emitterNumber = { i }; f12.receiverNumber = { j };
+				f12.numberOfElements1 = mesh1.num_total_elements;
+				f12.numberOfElements2 = mesh2.num_total_elements;
+				f12.area1 = mesh1.area;
+				f12.area2 = mesh2.area;
+
+
+				MAT_VF.setValue(i, j, f12.value);
+
+				/*
+				Q_rad.Fij = Q_rad.radiation(f12.value);
+				MAT_Q.setValue(i, j, Q_rad.Fij);
+				std::cout << Q_rad << "\n";
+				*/
+
+				/*
+				std::cout << f12 << "\n";
+				std::system("PAUSE");
+				*/
+			}
+			j++;
+
+		}
+		i++;
+
+
+		std::this_thread::sleep_for(std::chrono::milliseconds(500));  // Pause pour la simulation
+		showProgressBar(k + 1, list_maillages.size(), message);		
+		k++;
+		
+	}
+
+
+
+	std::system("cls");
+	std::cout << "\tVIEW FACTOR calculations DONE !" << "\n\n\n\n";
+	std::this_thread::sleep_for(std::chrono::milliseconds(2000));//pause de 2000 ms
+	std::system("cls");
+
+	/*
+	i = { 0 };
+	for (auto m1 : list_maillages)
+	{
+		std::string m1_msh = m1 + ".msh";
+		std::string m1_geo = m1 + ".geo";
+
+		geo_i.surfaceNumber = i;
+		N1 = geo_i.N;
+		e1 = geo_i.e;
+		T1 = geo_i.T;
+
+
+		GMSH::Mesh mesh1(m1_msh);
+
+		j = { 0 };
+		for (auto m2 : list_maillages)
+		{
+			std::string m2_msh = m2 + ".msh";
+			std::string m2_geo = m2 + ".geo";
+
+
+			geo_j.surfaceNumber = j;
+			N2 = geo_j.N;
+			e2 = geo_j.e;
+			T2 = geo_j.T;
+
+
+			GMSH::Mesh mesh2(m2_msh);
+
+			if (j < i)
+			{
+				//std::cout << "\t area1 = " << mesh1.area << "\t area2 = " << mesh2.area << "\n";
+				f12.value = MAT_VF.getValue(j, i) * (mesh1.area / mesh2.area);
+				f12.emitterNumber = { i }; f12.receiverNumber = { j };
+				f12.numberOfElements1 = mesh1.num_total_elements;
+				f12.numberOfElements2 = mesh2.num_total_elements;
+				f12.area1 = mesh1.area;
+				f12.area2 = mesh2.area;
+				MAT_VF.setValue(i, j, f12.value);
+
+				
+				std::cout << f12 << "\n";
+				//std::system("PAUSE");
+				std::this_thread::sleep_for(std::chrono::milliseconds(2500));//pause de 2000 ms
+				
+
+				
+				Q_rad.Fij = Q_rad.radiation(f12.value);
+				MAT_Q.setValue(i, j, Q_rad.Fij);
+				std::cout << Q_rad << "\n";
+				
+			}
+			j++;
+
+		}
+		i++;
+	}
+	*/
+
+
+	
+
+	for (int i = 0; i < MAT_VF.rowSize(); i++)
+	{
+		double sum_j = { 0.0 };
+		for (int j = 0; j < MAT_VF.columnSize(); j++)
+		{
+			if (i != j)
+			{
+				sum_j += MAT_VF.x[i][j];
+			}
+		}
+		MAT_VF.x[i][i] = std::abs(1.0 - sum_j);
+	}
+
+
+
+
+
+	/* AFFICHAGE de la MATRICE des FACTEURS de VUE avant RENORMALISATION */
+	/*
+	std::cout << "\n\n";
+	std::cout << "\t\t\t***********************************\n";
+	std::cout << "\t\t\t        VIEW FACTOR MATRIX         \n";
+	std::cout << "\t\t\t***********************************\n";
+	std::cout << "\n\n";
+	std::cout << MAT_VF << "\n";
+	*/
+	
+
+
+
+	std::cout << "\n\n\t\tCREATING VIEW FACTOR MATRIX IS COMPLETE !\n\n";
+	std::this_thread::sleep_for(std::chrono::milliseconds(2000));//pause de 2000 ms
+
+
+	std::system("cls");
+	/*
+	std::system("PAUSE");
+	
+	*/
+	
+	
+	
+
+
+
+
+
+
+	/* RENORMALISATION des FACTEURS de VUE (pour garantir la conservation de l'énergie - CF CGHATGPT) */
+	for (int i = 0; i < MAT_VF.rowSize(); i++)
+	{
+		double value = { 0.0 };
+		for (int j = 0; j < MAT_VF.columnSize(); j++)
+		{
+			value = MAT_VF.getValue(i, j) / MAT_VF.sumOfLineElement(i);
+			MAT_VF.setValue(i, j, value);
+		}
+	}
+
+
+
+
+	//std::this_thread::sleep_for(std::chrono::milliseconds(2000));//pause de 2000 ms
+	std::cout << "\n\n\t\tRENORMALIZATION OF VIEW FACTOR IS DONE !\n\n";
+	std::this_thread::sleep_for(std::chrono::milliseconds(2000));//pause de 2000 ms
+
+
+
+
+	std::system("cls");
+	
+
+
+
+	/* AFFICHAGE de la MATRICE des FACTEURS de VUE aprés RENORMALISATION */	
+	std::cout << "\n\n";
+	std::cout << "\t\t\t***********************************\n";
+	std::cout << "\t\t\t        VIEW FACTOR MATRIX (N)     \n";
+	std::cout << "\t\t\t***********************************\n";
+	//std::cout << "\t\t" << folder << "\n\n";
+	//std::cout << "\n\n";
+	std::cout << MAT_VF << "\n";
+
+
+
+	/*
+	std::system("PAUSE");
+	std::system("cls");
+	*/
+
+
+
+
+	/* ECRITURE de la MATRICE des FACTEURS de VUE dans un FICHIER */
+	fic = { "View_Factor_Matrix_" }, ext = { ".txt" };
+	filename = pathname + fic + folder + ext;
+	printFile(MAT_VF, filename, z);
+
+
+	std::cout << "\n\n\t\tWRITING VIEW FACTOR MATRIX TO FILE IS DONE !\n\n";
+	std::this_thread::sleep_for(std::chrono::milliseconds(2000));//pause de 2000 ms
+
+
+
+
+	std::system("PAUSE");
+	std::system("cls");
+
+
+
 
 
 

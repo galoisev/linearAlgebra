@@ -6,11 +6,67 @@
 #include <stdexcept>
 #include <sstream>
 #include <fstream>
+#include <limits>
+#include <cmath> // Pour std::abs
+#include <complex>
+#include <format>
 #include <assert.h>
+#include <stdio.h>      /* printf, scanf, puts, NULL */
+#include <stdlib.h>     /* srand, rand */
+#include <time.h>       /* time */
 
 
 
+typedef double dble;
 
+
+
+template<typename T>
+inline void swap(T& a, T& b)
+{
+    T tmp(a);
+    a = b;
+    b = tmp;
+}
+
+template<typename T>
+inline T MAX(T& a, T& b)
+{
+    if (a > b)
+    {
+        return a;
+    }
+    else
+    {
+        return b;
+    }
+}
+
+template<typename T>
+inline T MIN(T& a, T& b)
+{
+    if (a < b)
+    {
+        return a;
+    }
+    else
+    {
+        return b;
+    }
+}
+
+template<typename T>
+inline T ABS(T& a)
+{
+    if (a < 0)
+    {
+        return -a;
+    }
+    else
+    {
+        return a;
+    }
+}
 
 
 
@@ -39,6 +95,7 @@ public:
 
     T& operator()(size_t i, size_t j);
     bool operator==(const Matrix<T>& mat);// compare les matrices élément par élément
+    auto operator<=>(const Matrix<T>& tab)const = default;
 
     Matrix<T> operator+(const Matrix<T>& mat);
     Matrix<T>& operator+=(const Matrix<T>& mat);
@@ -46,7 +103,12 @@ public:
     Matrix<T>& operator-=(const Matrix<T>& mat);
     
     Matrix<T> operator*(Matrix<T>& mat);
-    Matrix<T> operator/(const T& c); 
+    Matrix<T> operator/(const T& c)const;
+    Matrix<T> operator/=(const T& c);
+
+    
+
+
 
     Matrix<T> transpose();
     T trace();
@@ -61,11 +123,24 @@ public:
 
 
     void setValue(size_t i, size_t j, T val);
+    void setValue2(size_t k, T val);
     T getValue(size_t i, size_t j);
 
 
     bool isSymetric();
     bool isTridiagonal();
+    bool isDiagonal();
+    bool isLowerTriangular();//todo
+    bool isUpperTriangular();//todo
+    bool isHessenberg();//todo
+    bool isToeplitz();//todo
+
+    Matrix<T> renormalization();
+
+
+
+    Matrix<T> transformation(char& axis, dble& angle_RAD);
+    Matrix<T> translation(char& axis, dble& angle_RAD, dble& tx, dble& ty, dble& tz);
 
     void print(std::string message);
 
@@ -92,8 +167,472 @@ public:
     }
 
 
+    //linear algebra
+    Matrix<T> rowDeletion(Matrix<T>& mat, int rowNumber, int columnNumber);
+    T expo(int n);
+    Matrix<T> coMatrix();    
+    T det(Matrix<T>& mat1);
+    T det();
+    Matrix<T>inv();
+    
+
+    Matrix<T> reshape(int _newRows, int _newCols);
+    Matrix<T> random(); 
+
+    T norm_1();//standard norm 1 of the table
+    T norm_2();//standard norm 2 (Frobenius) of the table
+    T sumOfLineElement(int& lineNumber);
+    T sumOfColumnElements(int& columnNumber);
+    T getSumElementsOfColumn(int& col);
+    T getSumElementsOfRow(int& row);
+
+    T getElementMaxOf(char choice, int number);//find most important values ​​from rows.
+
+
 
 };
+
+
+
+template<typename T>
+T Matrix<T>::getSumElementsOfColumn(int& col)
+{
+    T sum = { 0.0 };
+    for (int i = 0; i < this->getRows(); i++)
+    {
+        sum += this->getValue(i, col);
+    }
+    return sum;
+}
+
+template<typename T>
+T Matrix<T>::getSumElementsOfRow(int& row)
+{
+    T sum = T(0);
+    for (int j = 0; j < this->getCols(); j++)
+    {
+        sum += this->getValue(row, j);
+    }
+    return sum;
+}
+
+
+template<typename T>
+T Matrix<T>::getElementMaxOf(char choice, int number)//find most important values ​​from rows('r') or columns('c').
+{
+    // Initialisation avec la plus petite valeur possible pour T
+    T val = T(0); // std::numeric_limits<T>::lowest();
+    switch (choice) {
+    case 'r':// Rechercher dans une ligne
+        // code block
+        if (number < 0 || number >= this->getCols()) {
+            std::cerr << "L'indice de colonne est invalide.\n";
+            return val;
+        }
+        for (int j = 0; j < this->getCols(); j++) {
+            T currentValue = this->getValue(number, j);
+            if (std::abs(currentValue) > std::abs(val)) {
+                val = currentValue;
+            }
+        }
+        break;
+    case 'c':// Rechercher dans une colonne
+        // code block
+        if (number < 0 || number >= this->getRows()) {
+            std::cerr << "L'indice de ligne est invalide.\n";
+            return val;
+        }
+        for (int i = 0; i < this->getRows(); i++) {
+            T currentValue = this->getValue(i, number);
+            if (std::abs(currentValue) > std::abs(val)) {
+                val = currentValue;
+            }
+        }
+        break;
+    default:
+        // code block
+        std::cerr << "Le premier paramètre doit être 'r' (ligne) ou 'c' (colonne).\n";
+    } 
+    return val;    
+}
+
+
+
+
+template<typename T>
+T Matrix<T>::norm_2()
+{
+    T norm_l2{ 0 };
+    T sum_i{ 0 };
+    for (int i = 0; i < this->getRows(); i++)
+    {
+        T sum_j{ 0 };
+        for (int j = 0; j < this->getCols(); j++)
+        {
+            T squarematcoefij = this->getValue2(i, j) * this->getValue2(i, j);
+            sum_j += squarematcoefij;
+        }
+        sum_i += sum_j;
+    }
+    norm_l2 = sum_i;
+    return sqrt(norm_l2);
+}
+
+
+template<typename T>
+T Matrix<T>::norm_1()
+{
+    std::vector<T> vmatcoef;
+    T norm_l1{ 0 };
+    for (int j = 0; j < this->columnSize(); j++)
+    {
+        T sum{ 0 };
+        for (int i = 0; i < this->rowSize(); i++)
+        {
+            T matcoefij = this->getValue2(i, j);
+            sum += ope::ABS(matcoefij);
+        }
+        vmatcoef.push_back(sum);
+    }
+    norm_l1 = ope::maxVector(vmatcoef);
+    return norm_l1;
+}
+
+
+
+template<typename T>
+Matrix<T> Matrix<T>::renormalization()
+{
+    Matrix<T>tmp(this->getRows(), this->getCols(), T(0));
+    for (int i = 0; i < this->getRows(); i++)
+    {
+        dble value = { 0.0 }; 
+        for (int j = 0; j < this->getCols(); j++)
+        {
+            value = dble( (this->getValue(i, j)) / (this->getElementMaxOf('r',i)));
+            tmp.setValue(i, j, value);
+        }
+    }
+    return tmp;
+}
+
+
+template<typename T>
+void Matrix<T>::setValue2(size_t k, T val)
+{
+    if (k >= this->_rows*this->_cols) {
+        throw std::out_of_range("Index hors limite !");
+    }
+    x[k] = val;
+}
+
+
+template<typename T>
+Matrix<T> Matrix<T>::reshape(int _newRows, int _newCols)
+{
+    if (_newRows*_newCols != _rows * _cols) {
+        throw std::invalid_argument("Nombre d'éléments incompatible avec les dimensions.");
+    }
+    Matrix<T>tmp(_newRows, _newCols, 0);
+    for (size_t k = 0; k < _rows * _cols; k++)
+    {
+        tmp.setValue2(k, this->x[k]);
+    }
+    return tmp;
+}
+
+
+
+template<typename T>
+Matrix<T> Matrix<T>::random()
+{
+    Matrix<T> R(_rows, _cols, 0);
+    for (size_t i = 0; i < _rows; i++)
+    {
+        for (size_t j = 0; j < _cols; j++)
+        {
+            int val  = rand() % 100;
+            R.setValue(i, j, val);
+        }
+    }
+    return R;
+}
+
+
+template<typename T>
+bool Matrix<T>::isDiagonal()
+{
+    assert(_rows == _cols);
+    bool test = false;
+    size_t cpt = { 0 };
+    for (size_t i = 0; i < _rows; i++)
+    {
+        for (size_t j = 0; j < _cols; j++)
+        {
+            if ((this->getValue(i, i) != 0) && (this->getValue(i, j) == 0))
+                cpt++;
+        }
+    }
+    if (cpt == _rows)
+        test = true;
+    return test;
+}
+
+
+
+template<typename T>
+Matrix<T> Matrix<T>::translation(char& axis, dble& angle_RAD, dble& tx, dble& ty, dble& tz)
+{
+    assert((_rows == 4) && (_cols == 4));
+    Matrix<T> P(4, 4);
+
+    switch (axis)
+    {
+    case 'x':
+        // The axis of rotation is “x”.
+        P.setValue(0, 0, 1); P.setValue(0, 1, 0); P.setValue(0, 2, 0); P.setValue(0, 3, tx);
+        P.setValue(1, 0, 0); P.setValue(1, 1, cos(angle_RAD)); P.setValue(1, 2, -sin(angle_RAD)); P.setValue(1, 3, ty);
+        P.setValue(2, 0, 0); P.setValue(2, 1, sin(angle_RAD)); P.setValue(2, 2, cos(angle_RAD)); P.setValue(2, 3, tz);
+        P.setValue(3, 0, 0); P.setValue(3, 1, 0); P.setValue(3, 2, 0); P.setValue(3, 3, 1);
+        break;
+    case 'X':
+        // The axis of rotation is “X”.
+        P.setValue(0, 0, 1); P.setValue(0, 1, 0); P.setValue(0, 2, 0); P.setValue(0, 3, tx);
+        P.setValue(1, 0, 0); P.setValue(1, 1, cos(angle_RAD)); P.setValue(1, 2, -sin(angle_RAD)); P.setValue(1, 3, ty);
+        P.setValue(2, 0, 0); P.setValue(2, 1, sin(angle_RAD)); P.setValue(2, 2, cos(angle_RAD)); P.setValue(2, 3, tz);
+        P.setValue(3, 0, 0); P.setValue(3, 1, 0); P.setValue(3, 2, 0); P.setValue(3, 3, 1);
+        break;
+    case 'y':
+        // The axis of rotation is “y”.            
+        P.setValue(0, 0, cos(angle_RAD)); P.setValue(0, 1, 0); P.setValue(0, 2, -sin(angle_RAD)); P.setValue(0, 3, tx);
+        P.setValue(1, 0, 0); P.setValue(1, 1, 1); P.setValue(1, 2, 0); P.setValue(1, 3, ty); P.setValue(1, 3, ty);
+        P.setValue(2, 0, sin(angle_RAD)); P.setValue(2, 1, 0); P.setValue(2, 2, cos(angle_RAD)); P.setValue(2, 3, tz);
+        P.setValue(3, 0, 0); P.setValue(3, 1, 0); P.setValue(3, 2, 0); P.setValue(3, 3, 1);
+        break;
+    case 'Y':
+        // The axis of rotation is “Y”.            
+        P.setValue(0, 0, cos(angle_RAD)); P.setValue(0, 1, 0); P.setValue(0, 2, -sin(angle_RAD)); P.setValue(0, 3, tx);
+        P.setValue(1, 0, 0); P.setValue(1, 1, 1); P.setValue(1, 2, 0); P.setValue(1, 3, ty);
+        P.setValue(2, 0, sin(angle_RAD)); P.setValue(2, 1, 0); P.setValue(2, 2, cos(angle_RAD)); P.setValue(2, 3, tz);
+        P.setValue(3, 0, 0); P.setValue(3, 1, 0); P.setValue(3, 2, 0); P.setValue(3, 3, 1);
+        break;
+    case 'z':
+        // The axis of rotation is “z”.
+        P.setValue(0, 0, cos(angle_RAD)); P.setValue(0, 1, -sin(angle_RAD)); P.setValue(0, 2, 0); P.setValue(0, 3, tx);
+        P.setValue(1, 0, sin(angle_RAD)); P.setValue(1, 1, cos(angle_RAD)); P.setValue(1, 2, 0); P.setValue(1, 3, ty);
+        P.setValue(2, 0, 0); P.setValue(2, 1, 0); P.setValue(2, 2, 1); P.setValue(2, 3, tz);
+        P.setValue(3, 0, 0); P.setValue(3, 1, 0); P.setValue(3, 2, 0); P.setValue(3, 3, 1);
+        break;
+    case 'Z':
+        // The axis of rotation is “Z”.
+        P.setValue(0, 0, cos(angle_RAD)); P.setValue(0, 1, -sin(angle_RAD)); P.setValue(0, 2, 0); P.setValue(0, 3, tx);
+        P.setValue(1, 0, sin(angle_RAD)); P.setValue(1, 1, cos(angle_RAD)); P.setValue(1, 2, 0); P.setValue(1, 3, ty);
+        P.setValue(2, 0, 0); P.setValue(2, 1, 0); P.setValue(2, 2, 1); P.setValue(2, 3, tz);
+        P.setValue(3, 0, 0); P.setValue(3, 1, 0); P.setValue(3, 2, 0); P.setValue(3, 3, 1);
+        break;
+    case 'xyz':
+        angle_RAD = 0.0;
+        P.setValue(0, 0, cos(angle_RAD)); P.setValue(0, 1, -sin(angle_RAD)); P.setValue(0, 2, 0); P.setValue(0, 3, tx);
+        P.setValue(1, 0, sin(angle_RAD)); P.setValue(1, 1, cos(angle_RAD)); P.setValue(1, 2, 0);
+        P.setValue(2, 0, 0); P.setValue(2, 1, 0); P.setValue(2, 2, 1); P.setValue(2, 3, tz);
+        P.setValue(3, 0, 0); P.setValue(3, 1, 0); P.setValue(3, 2, 0); P.setValue(3, 3, 1);
+        break;
+    case 'XYZ':
+        angle_RAD = 0.0;
+        P.setValue(0, 0, cos(angle_RAD)); P.setValue(0, 1, -sin(angle_RAD)); P.setValue(0, 2, 0); P.setValue(0, 3, tx);
+        P.setValue(1, 0, sin(angle_RAD)); P.setValue(1, 1, cos(angle_RAD)); P.setValue(1, 2, 0);
+        P.setValue(2, 0, 0); P.setValue(2, 1, 0); P.setValue(2, 2, 1); P.setValue(2, 3, tz);
+        P.setValue(3, 0, 0); P.setValue(3, 1, 0); P.setValue(3, 2, 0); P.setValue(3, 3, 1);
+        break;
+
+    default:
+        std::cout << "\tThe axis are either 'x', 'y' or 'z'. Type 'x' or 'X', ..." << std::endl;
+        break;
+    }
+
+    return P;
+}
+
+
+template<typename T>
+Matrix<T> Matrix<T>::transformation(char& axis, dble& angle_RAD)
+{
+    assert((_rows == 3) && (_cols == 3));
+    Matrix<T> P(3, 3);
+
+    switch (axis)
+    {
+    case 'x':
+        // The axis of rotation is “x”.
+        P.setValue(0, 0, 1); P.setValue(0, 1, 0); P.setValue(0, 2, 0);
+        P.setValue(1, 0, 0); P.setValue(1, 1, cos(angle_RAD)); P.setValue(1, 2, -sin(angle_RAD));
+        P.setValue(2, 0, 0); P.setValue(2, 1, sin(angle_RAD)); P.setValue(2, 2, cos(angle_RAD));
+        break;
+    case 'X':
+        // The axis of rotation is “X”.
+        P.setValue(0, 0, 1); P.setValue(0, 1, 0); P.setValue(0, 2, 0);
+        P.setValue(1, 0, 0); P.setValue(1, 1, cos(angle_RAD)); P.setValue(1, 2, -sin(angle_RAD));
+        P.setValue(2, 0, 0); P.setValue(2, 1, sin(angle_RAD)); P.setValue(2, 2, cos(angle_RAD));
+        break;
+    case 'y':
+        // The axis of rotation is “y”.            
+        P.setValue(0, 0, cos(angle_RAD)); P.setValue(0, 1, 0); P.setValue(0, 2, -sin(angle_RAD));
+        P.setValue(1, 0, 0); P.setValue(1, 1, 1); P.setValue(1, 2, 0);
+        P.setValue(2, 0, sin(angle_RAD)); P.setValue(2, 1, 0); P.setValue(2, 2, cos(angle_RAD));
+        break;
+    case 'Y':
+        // The axis of rotation is “Y”.            
+        P.setValue(0, 0, cos(angle_RAD)); P.setValue(0, 1, 0); P.setValue(0, 2, -sin(angle_RAD));
+        P.setValue(1, 0, 0); P.setValue(1, 1, 1); P.setValue(1, 2, 0);
+        P.setValue(2, 0, sin(angle_RAD)); P.setValue(2, 1, 0); P.setValue(2, 2, cos(angle_RAD));
+        break;
+    case 'z':
+        // The axis of rotation is “z”.
+        P.setValue(0, 0, cos(angle_RAD)); P.setValue(0, 1, -sin(angle_RAD)); P.setValue(0, 2, 0);
+        P.setValue(1, 0, sin(angle_RAD)); P.setValue(1, 1, cos(angle_RAD)); P.setValue(1, 2, 0);
+        P.setValue(2, 0, 0); P.setValue(2, 1, 0); P.setValue(2, 2, 1);
+        break;
+    case 'Z':
+        // The axis of rotation is “Z”.
+        P.setValue(0, 0, cos(angle_RAD)); P.setValue(0, 1, -sin(angle_RAD)); P.setValue(0, 2, 0);
+        P.setValue(1, 0, sin(angle_RAD)); P.setValue(1, 1, cos(angle_RAD)); P.setValue(1, 2, 0);
+        P.setValue(2, 0, 0); P.setValue(2, 1, 0); P.setValue(2, 2, 1);
+        break;
+    case 'xyz':
+        angle_RAD = 0.0;
+        P.setValue(0, 0, cos(angle_RAD)); P.setValue(0, 1, -sin(angle_RAD)); P.setValue(0, 2, 0);
+        P.setValue(1, 0, sin(angle_RAD)); P.setValue(1, 1, cos(angle_RAD)); P.setValue(1, 2, 0);
+        P.setValue(2, 0, 0); P.setValue(2, 1, 0); P.setValue(2, 2, 1);
+        break;
+    case 'XYZ':
+        angle_RAD = 0.0;
+        P.setValue(0, 0, cos(angle_RAD)); P.setValue(0, 1, -sin(angle_RAD)); P.setValue(0, 2, 0);
+        P.setValue(1, 0, sin(angle_RAD)); P.setValue(1, 1, cos(angle_RAD)); P.setValue(1, 2, 0);
+        P.setValue(2, 0, 0); P.setValue(2, 1, 0); P.setValue(2, 2, 1);
+        break;
+
+    default:
+        std::cout << "\tThe axis are either 'x', 'y' or 'z'. Type 'x' or 'X', ..." << std::endl;
+        break;
+    }
+
+    return P;
+}
+
+
+
+
+
+
+
+template<typename T>
+Matrix<T> Matrix<T>::rowDeletion(Matrix<T>& mat, int rowNumber, int columnNumber)
+{
+    assert(mat.getCols() == mat.getRows());
+    Matrix<T> dest(mat.getRows() - 1, mat.getCols() - 1, 0);
+    size_t l = { 0 }, c;
+    for (size_t ii = 0; ii < mat.getRows(); ii++)
+    {
+        if (ii != rowNumber)
+        {
+            c = { 0 };
+            for (size_t jj = 0; jj < mat.getCols(); jj++)
+            {
+                if (jj != columnNumber)
+                {
+                    T val = mat.getValue(ii, jj);
+                    dest.setValue(l, c, val);
+                    c++;
+                }
+            }
+            l++;
+        }
+    }
+    return dest;
+}
+
+template<typename T>
+T Matrix<T>::expo(int n)
+{
+    if ((n % 2) != 0) //n est pair
+        return 1;
+    else
+        return -1;
+}
+
+template<typename T>
+Matrix<T> Matrix<T>::coMatrix()
+{
+    Matrix<T> mat2(_rows, _cols, 0);
+    Matrix<T> tmp(_rows, _cols, 0);
+    assert(_rows == _cols);
+    if (_rows == 1)
+    {
+        T val = 1.0;
+        tmp.setValue(0, 0, val);
+    }
+    else
+    {
+        for (size_t i = 0; i < _rows; i++)
+        {
+            for (size_t j = 0; j < _cols; j++)
+            {
+                mat2 = this->rowDeletion(*this, i, j);
+                T val = this->expo(i + j) * mat2.det();
+                tmp.setValue(i, j, val);
+            }
+        }
+    }
+    return tmp;
+}
+
+
+
+
+template<typename T>
+Matrix<T> Matrix<T>::inv()
+{
+    Matrix<T> tmp(_rows, _cols, 0);
+    assert(this->det() != 0);
+    tmp = this->coMatrix().transpose() / this->det();
+    return tmp;
+}
+
+template<typename T>
+T Matrix<T>::det(Matrix<T>& mat1)
+{
+    //recursivité
+    assert(mat1.getCols() == mat1.getRows());
+    Matrix<T> mat2(mat1.getRows(), mat1.getCols(), 0);
+    T x = { 0 };
+    if (mat1.getRows() == 1)
+        return mat1.getValue(0, 0);
+    else
+    {
+        for (int i = 0; i < mat1.getRows(); i++)
+        {
+            mat2 = mat2.rowDeletion(mat1, i, 0);//suivant les lignes
+            x += mat1.expo(i) * mat1.getValue(i, 0) * det(mat2);
+        }
+        return x;
+    }
+}
+
+template<typename T>
+T Matrix<T>::det()
+{
+    return det(*this);
+}
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -259,7 +798,7 @@ Matrix<T> Matrix<T>:: operator*(Matrix<T>& mat)
 
 
 template<typename T>
-Matrix<T> Matrix<T>:: operator/(const T& c)
+Matrix<T> Matrix<T>:: operator/(const T& c)const
 {
     if (c == 0)
     {
@@ -280,6 +819,21 @@ Matrix<T> Matrix<T>:: operator/(const T& c)
         }
     }
     return temp;
+}
+
+template<typename T>
+Matrix<T> Matrix<T>::operator/=(const T& c)
+{
+    assert(c != 0);
+    for (size_t i = 0; i < _rows; i++)
+    {
+        for (size_t j = 0; j < _cols; j++)
+        {
+            size_t k = i * this->_cols + j;
+            this->x[k] /= c;
+        }
+    }
+    return (*this);
 }
 
 
@@ -468,6 +1022,308 @@ Matrix<T> operator*(Matrix<T>& mat2, T c)
 
 
 
+
+
+
+
+
+
+
+
+
+
+/*
+template<typename T>
+void Matrix<T>::swap(T& a, T& b)
+{
+    T tmp(a);
+    a = b;
+    b(tmp);
+}
+
+
+template<typename T>
+Matrix<T> Matrix<T>::rowDeletion(Matrix<T>& mat, int rowNumber, int columnNumber)
+{
+    assert(mat.getCols() == mat.getRows());
+    Matrix<T> dest(mat.getRows() - 1, mat.getCols() - 1, 0);
+    size_t l = { 0 }, c;
+    for (size_t ii = 0; ii < mat.getRows(); ii++)
+    {
+        if (ii != rowNumber)
+        {
+            c = { 0 };
+            for (size_t jj = 0; jj < mat.getCols(); jj++)
+            {
+                if (jj != columnNumber)
+                {
+                    T val = mat.getValue(ii, jj);
+                    dest.setValue(l, c, val);
+                    c++;
+                }
+            }
+            l++;
+        }
+    }
+    return dest;
+}
+
+
+
+
+template<typename T>
+Matrix<T> Matrix<T>::inv()
+{
+    Matrix<T> tmp(_rows, _cols, 0);
+    assert(this->det() != 0);
+    tmp = this->coMatrix().transpose() / this->det();
+    return tmp;
+}
+
+template<typename T>
+T Matrix<T>::det(Matrix<T>& mat1)
+{
+    //recursivité
+    assert(mat1.getCols() == mat1.getRows());
+    Matrix<T> mat2(mat1.getRows(), mat1.getCols(), 0);
+    T x = { 0 };
+    if (mat1.getRows() == 1)
+        return mat1.getValue(0, 0);
+    else
+    {
+        for (int i = 0; i < mat1.getRows(); i++)
+        {
+            mat2 = mat2.rowDeletion(mat1, i, 0);//suivant les lignes
+            x += mat1.expo(i) * mat1.getValue(i, 0) * det(mat2);
+        }
+        return x;
+    }
+}
+
+template<typename T>
+T Matrix<T>::det()
+{
+    return det(*this);
+}
+
+
+
+template<typename T>
+T Matrix<T>::expo(int n)
+{
+    if ((n % 2) != 0) //n est pair
+        return 1;
+    else
+        return -1;
+}
+
+template<typename T>
+Matrix<T> Matrix<T>::coMatrix()
+{
+    Matrix<T> mat2(_rows, _cols, 0);
+    Matrix<T> tmp(_rows, _cols, 0);
+    assert(_rows == _cols);
+    if (_rows == 1)
+    {
+        T val = 1.0;
+        tmp.setValue(0, 0, val);
+    }
+    else
+    {
+        for (size_t i = 0; i < _rows; i++)
+        {
+            for (size_t j = 0; j < _cols; j++)
+            {
+                mat2 = this->rowDeletion(*this, i, j);
+                T val = this->expo(i + j) * mat2.det();
+                tmp.setValue(i, j, val);
+            }
+        }
+    }
+    return tmp;
+}
+
+*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+//friend class, Friendship and inheritance
+/*
+
+template<typename T>
+class Linalg :public Matrix<T>
+{
+public:
+
+    Linalg(Matrix<T>& A);
+
+    void swap(T& a, T& b);
+    Matrix<T> rowDeletion(Matrix<T>& mat, int rowNumber, int columnNumber);    
+    T expo(int n);
+    Matrix<T> coMatrix();
+    T det(Matrix<T>& mat1);
+    T det();
+    Matrix<T>inv();
+    
+
+};
+
+template<typename T>
+void Linalg<T>::swap(T& a, T& b)
+{
+    T tmp(a);
+    a = b;
+    b(tmp);
+}
+
+
+template<typename T>
+Matrix<T> Linalg<T>::rowDeletion(Matrix<T>& mat, int rowNumber, int columnNumber)
+{
+    assert(mat.getCols() == mat.getRows());
+    Matrix<T> dest(mat.getRows() - 1, mat.getCols() - 1, 0);
+    size_t l = { 0 }, c;
+    for (size_t ii = 0; ii < mat.getRows(); ii++)
+    {
+        if (ii != rowNumber)
+        {
+            c = { 0 };
+            for (size_t jj = 0; jj < mat.getCols(); jj++)
+            {
+                if (jj != columnNumber)
+                {
+                    T val = mat.getValue(ii, jj);
+                    dest.setValue(l, c, val);
+                    c++;
+                }
+            }
+            l++;
+        }
+    }
+    return dest;
+}
+
+
+
+
+template<typename T>
+Matrix<T> Linalg<T>::inv()
+{
+    Matrix<T> tmp(_rows, _cols, 0);
+    assert(this->det() != 0);
+    tmp = this->coMatrix().transpose() / this->det();
+    return tmp;
+}
+
+template<typename T>
+T Linalg<T>::det(Matrix<T>& mat1)
+{
+    //recursivité
+    assert(mat1.getCols() == mat1.getRows());
+    Matrix<T> mat2(mat1.getRows(), mat1.getCols(), 0);
+    T x = { 0 };
+    if (mat1.getRows() == 1)
+        return mat1.getValue(0, 0);
+    else
+    {
+        for (int i = 0; i < mat1.getRows(); i++)
+        {
+            mat2 = mat2.rowDeletion(mat1, i, 0);//suivant les lignes
+            x += mat1.expo(i) * mat1.getValue(i, 0) * det(mat2);
+        }
+        return x;
+    }
+}
+
+template<typename T>
+T Linalg<T>::det()
+{
+    return det(*this);
+}
+
+
+
+template<typename T>
+void Linalg<T>::swap(T& a, T& b)
+{
+    T tmp(a);
+    a = b;
+    b(tmp);
+}
+
+
+template<typename T>
+Matrix<T> Linalg<T>::rowDeletion(Matrix<T>& mat, int rowNumber, int columnNumber)
+{
+    assert(mat.getCols() == mat.getRows());
+    Matrix<T> dest(mat.getRows() - 1, mat.getCols() - 1, 0);
+    size_t l = { 0 }, c;
+    for (size_t ii = 0; ii < mat.getRows(); ii++)
+    {
+        if (ii != rowNumber)
+        {
+            c = { 0 };
+            for (size_t jj = 0; jj < mat.getCols(); jj++)
+            {
+                if (jj != columnNumber)
+                {
+                    T val = mat.getValue(ii, jj);
+                    dest.setValue(l, c, val);
+                    c++;
+                }
+            }
+            l++;
+        }
+    }
+    return dest;
+}
+
+
+template<typename T>
+T Linalg<T>::expo(int n)
+{
+    if ((n % 2) != 0) //n est pair
+        return 1;
+    else
+        return -1;
+}
+
+template<typename T>
+Matrix<T> Linalg<T>::coMatrix()
+{
+    Matrix<T> mat2(_rows, _cols, 0);
+    Matrix<T> tmp(_rows, _cols, 0);
+    assert(_rows == _cols);
+    if (_rows == 1)
+    {
+        T val = 1.0;
+        tmp.setValue(0, 0, val);
+    }
+    else
+    {
+        for (size_t i = 0; i < _rows; i++)
+        {
+            for (size_t j = 0; j < _cols; j++)
+            {
+                mat2 = this->rowDeletion(*this, i, j);
+                T val = this->expo(i + j) * mat2.det();
+                tmp.setValue(i, j, val);
+            }
+        }
+    }
+    return tmp;
+}
+*/
 
 
 
