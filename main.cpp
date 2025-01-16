@@ -58,7 +58,7 @@
 void showProgressBar(int progress, int total, std::string message1) {
 	int barWidth = 50;
 	float percentage = static_cast<float>(progress) / total;
-	int pos = barWidth * percentage;
+	int pos = (int)(barWidth * percentage);
 	std::cout << message1 << "\n\n";
 	std::cout << "\t\t\t[";
 	for (int i = 0; i < barWidth; ++i) {
@@ -259,12 +259,13 @@ double Laplace_transform(double(*func)(double& s, double& t), std::vector<double
 
 
 
-
+/*
 double g(double& x)
 {
 	return x * x - x - 1;
-}
+}*/
 
+/*
 double dichotomy_method(double& a, double& b, double& precision, int& max_iter)
 {
 	if (g(a) * g(b) >= 0.)
@@ -300,7 +301,7 @@ double dichotomy_method(double& a, double& b, double& precision, int& max_iter)
 		}
 	}
 	return sol;
-}
+}*/
 
 
 int readFile(std::string& filename)
@@ -772,20 +773,131 @@ int	main(void)
 	/*
 	MAT_E = MAT_D * MAT_D;
 	MAT_F.print("MAT_C = ");*/
+
+
+	/* test SOLVE par methode directe GAUSS */
+	typedef Matrix<dble> type_mat_dble, type_vec_dble;
+
+
+	type_mat_dble mat_AA(3, 3, 0);
+	type_vec_dble vec_bb(3, 1, 0), vec_x(3, 1, 0), vec_delta(3,1,0);
+
+	mat_AA.setValue(0, 0, 2); mat_AA.setValue(0, 1, 8); mat_AA.setValue(0, 2, 4);
+	mat_AA.setValue(1, 0, 2); mat_AA.setValue(1, 1, 10); mat_AA.setValue(1, 2, 6);
+	mat_AA.setValue(2, 0, 1); mat_AA.setValue(2, 1, 8); mat_AA.setValue(2, 2, 2);
+
+	std::cout << mat_AA << "\n";
+
+	vec_bb.setValue(0, 0, 1); 
+	vec_bb.setValue(1, 0, 1); 
+	vec_bb.setValue(2, 0, 1);
+
+	std::cout << vec_bb << "\n";
+
+	vec_x = solve(mat_AA, vec_bb);
+	std::cout << "\nvec_x = "<< "\n";
+	std::cout << vec_x << "\n";
+
+
 	
 	
 
+	/*
+	* test
+	*/
+	vec_delta = mat_AA * vec_x;
+	std::cout << vec_delta << "\n";
 
 
+
+
+	Matrix<float>comp;
+	std::cout << comp << "\n";
+
+
+	Vector<dble> vx(3, 0.2), vy(3, 0.1);
+	std::cout << vx << "\n";
+	std::cout << vy << "\n";
+
+	vx.setValue(0, 1); vx.setValue(1, -1); vx.setValue(2, 2);
+	std::cout << vx << "\n";
+	vy.setValue(0, -1); vy.setValue(1, 4); vy.setValue(2, 3);
+	std::cout << vy << "\n";
+	std::cout << "\tdot product = \n";
+	std::cout << vx.operator,(vy) << "\n";
+
+
+	std::cout << "\tcross product = \n";
+	Vector<dble>w(3, 0);
+	w = vx ^ vy;
+	std::cout << w << "\n";
+	
+	/*
+	vx.setValue(0, 0); vx.setValue(1,3); vx.setValue(2, 4); 	
+	std::cout << vx.normL2() << "\n";
+	*/
+
+
+	std::cout << "\tnorm 1" << "\n";
+	std::cout << mat_AA.norm_1() << "\n";
+	std::cout << "\tnorm 2" << "\n";
+	std::cout << mat_AA.norm_2() << "\n";
+
+
+
+	/*
+	Matrix<dble> A1(2, 2, 0);
+	A1.setValue(0, 0, 1); A1.setValue(0, 1, -2);
+	A1.setValue(1, 0, 0); A1.setValue(1, 1, 3);
+	std::cout << A1 << "\n";
+	Vector<dble> b1(2, 1), x1(2,0);
+	std::cout << b1 << "\n";
+	std::cout << x1 << "\n";
+
+	LINALG::MethodDirect<dble> met_directe;
+	x1 = met_directe.pivotDeGauss(A1, b1);
+	std::cout << x1 << "\n";
+	*/
+
+	
+
+	Matrix<dble> A1(2, 2, 0);
+	A1.setValue(0, 0, 1); A1.setValue(0, 1, -2);
+	A1.setValue(1, 0, 0); A1.setValue(1, 1, 3);
+	Vector<dble> b1(2, 1);
+	
+	enum METHNUM {PIVOT=1, DICO=2, DEFAULT};
+	switch (DICO)
+	{
+		case PIVOT:
+		{
+			std::cout << "\n\tmethode du pivot." << "\n";
+			methods::systLin::direct::Pivot<dble> Piv(A1, b1);
+			break;
+		}
+		case DICO:
+		{
+			std::cout << "\n\tmethode de la dichotomie." << "\n";
+			methods::solveEquations::Dichotomie Dico(1.0, 2.0, 1e-6, 100);
+			break;
+		}
+		default:
+		{
+			std::cout << "\taucune methode numerique connue !!!" << "\n";
+			break;
+		}
+	}
+
+
+
+	/* testing namespace SYSLIN */
+	//methods::solveEquations::Dichotomie Dico(1.0, 2.0, 1e-6, 100);
+
+	std::cout << "\n\n\t -----" << "\n\n";
 
 
 
 	
-
-
-
-
-
 
 
 
@@ -1078,7 +1190,7 @@ int	main(void)
 	pathname = pathname + "/" + folder + "/";
 	//list_maillages = { pathname + "surf0", pathname + "surf1" };
 	list_maillages = { pathname + "surf0", pathname + "surf1", pathname + "surf2", pathname + "surf3", pathname + "surf4", pathname + "surf5" };
-
+	int numberOfFiles= list_maillages.size() * list_maillages.size() - list_maillages.size();
 	
 
 	nbre_ligne = list_maillages.size();
@@ -1092,7 +1204,8 @@ int	main(void)
 
 	val_f12 = { 0.0 };
 	i = { 0 };
-	int k = { 0 };
+
+	int cpt_mesh_number = { 0 };
 	for (auto m1 : list_maillages)
 	{
 
@@ -1160,12 +1273,11 @@ int	main(void)
 
 			/*
 			int nombreDeMaillesTotaleALire = m1.size() * m2.size();
-			displayProgressBar(k, nombreDeMaillesTotaleALire, "READING MESH FILES in PROGRESS...");//
-			//std::this_thread::sleep_for(std::chrono::milliseconds(2000));  // Pause pour la simulation
+			//displayProgressBar(k, nombreDeMaillesTotaleALire, "READING MESH FILES in PROGRESS...");//
+			showProgressBar(k, nombreDeMaillesTotaleALire, "READING MESH FILES in PROGRESS...");
+			std::this_thread::sleep_for(std::chrono::milliseconds(2000));  // Pause pour la simulation
 			*/
 
-			
-			
 
 			if (j != i)
 			{
@@ -1190,16 +1302,21 @@ int	main(void)
 				std::cout << f12 << "\n";
 				std::system("PAUSE");
 				*/
+				showProgressBar(cpt_mesh_number, numberOfFiles, "READING MESH FILES in PROGRESS...");
+				std::this_thread::sleep_for(std::chrono::milliseconds(200));  // Pause pour la simulation
+				cpt_mesh_number++;
 			}
 			j++;
 
 		}
 		i++;
 
-
+		/*
 		std::this_thread::sleep_for(std::chrono::milliseconds(500));  // Pause pour la simulation
-		showProgressBar(k + 1, list_maillages.size(), message);		
-		k++;
+		showProgressBar(k + 1, list_maillages.size(), message);			
+		*/
+
+
 		
 	}
 
