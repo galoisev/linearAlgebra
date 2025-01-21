@@ -486,8 +486,33 @@ void summary(std::string& filename)
 }
 
 
+/* les fonctions */
+double f1(dble& x, dble& y)
+{
+	return (x - y * y + x * exp(y) - 2.0);
+}
+double f2(dble& x, dble& y)
+{
+	return (y * exp(y) + x * x * x - 1.0);
+}
 
-
+/* leurs derivees */
+double a11(dble& x, dble& y)//f22 = f2,y
+{
+	return ((y + 1) * exp(y));
+}
+double a12(dble& x, dble& y)//f12 = f1,y
+{
+	return (2 * y - x * exp(y));
+}
+double a21(dble& x, dble& y)//f21 = f2,x
+{
+	return (-3 * x * x);
+}
+double a22(dble& x, dble& y)//f11 = f1,x
+{
+	return (1 + exp(y));
+}
 
 
 
@@ -587,298 +612,58 @@ int	main(void)
 
 
 
-	std::cout << "\tDEBUT test classe du fichier array_class.h " << "\n";
-
-
-	typedef Matrix<dble> matd22;
-	matd22 A(2,2,0), B(2,2,0), C(2,2,0), D(2,2,0), G(2,2,0), Q(2,2,23.14);
-	A.setValue(0, 0, 1.0); A.setValue(0, 1, 4.0);
-	A.setValue(1, 0, 3.0); A.setValue(1, 1, 2.0);
-	A.print("A=");
-
-
-
-	B = A;
-	B.print("B = ");
-
-
-	std:: cout << "\tB est-elle symetrique ? " << B.isSymetric() << "\n";
-
-	C = A + B;
-	C.print("C = ");
-
-
-
-
-
-	matd22 I(2,2,0), J(2,2,0), K(2,2,0);
-	I = I.eye();
-	I.print("I");
-
-	std::cout << "\tI est-elle symetrique ? " << I.isSymetric() << "\n";
-	std::cout << "\tI.isDiagonal() = " << I.isDiagonal() << "\n";
-
-	J = J.ones();
-	J.print("J");
-	std::cout << "\tJ est-elle symetrique ? " << J.isSymetric() << "\n";
-	std::cout << "\tJ.isDiagonal() = " << J.isDiagonal() << "\n";
-
-
-
-	K = J - I/2;
-	K += I;
-	K.print("K");
-
 
 	
-	G = A.operator*(A);
-	G.print("G = A*A");
-
-
-	
-	Q.print("Q");
-
-
-
-	std::cout << "\ttrace(G) = " <<  G.trace() << "\n";
-
-	/*
-	typedef Matrix<dble> matd33;
-	matd33 matH(3,3,0);
-
-	std::cout << "\n\tH = " << "\n";
-	//std::cout << matH << "\n";
-
-
-	typedef Matrix<dble> matd32;
-	matd32 AmatH(2,3,0);
-	AmatH.print("A*matH = ");
-	*/
-
-
-
-	// Multiplier la matrice par un scalaire
-	int scalar = 2;
-	Matrix<int> MAT_A(2,2,1), MAT_B(2,2,2);
-	std::cout << MAT_A << "\n";
-	std::cout << MAT_B << "\n";	
-	
-
-	Matrix<int> result(2, 2, 7);
-	result.setValue(0, 1, -8);
-	result = scalar* result;
-	result.print("result = ");
-	result = result * 6;
-	std::cout << result << "\n";
-
-	/*
-	Matrix<int> MAT_C = MAT_A * MAT_B;
-	MAT_C.print("MAT_C = ");*/
-
-	Matrix<int> MAT_D(3, 2, 6);
-	MAT_D.setValue(2, 0, -5);
-	MAT_D.setValue(1, 1, -11);
-	MAT_D.print("MAT_D = ");
-
-	MAT_D = MAT_D.transpose();
-	MAT_D.print("tMAT_D = ");
-
-	Matrix<int> MAT_E(2,7,2); MAT_E.print("MAT_E = ");
-	std::cout << "\tD.isDiagonal() = " << D.isDiagonal() << "\n";
-
-
-	Matrix<dble>MAT_AA(3, 3, 0), MAT_AAA(2, 2, 0), MAT_AA_INV(3, 3, 0);
-	MAT_AA.setValue(0, 0, 10); MAT_AA.setValue(0, 1, 10); MAT_AA.setValue(0, 2, 11);
-	MAT_AA.setValue(1, 0, -6); MAT_AA.setValue(1, 1, 4); MAT_AA.setValue(1, 2, 7);
-	MAT_AA.setValue(2, 0, 3); MAT_AA.setValue(2, 1, -9); MAT_AA.setValue(2, 2, -5);
-	MAT_AA.print("MAT_AA = ");
-
-	std::cout << "\tMAT_AA.isDiagonal() = " << MAT_AA.isDiagonal() << "\n";
-
-
-
-
-	MAT_AAA = MAT_AAA.rowDeletion(MAT_AA, 1, 2);
-
-	MAT_AAA.print("MAT_AAA = ");
-	std:: cout << "\tdet(MAT_AA) = " << MAT_AA.det() << "\n\n\n";
-
-	//MAT_AA_INV = MAT_AA.operator/(MAT_AA.det());
-
-
-	MAT_AA_INV = MAT_AA.inv();
-	MAT_AA_INV.print("MAT_AA_INV = ");
-
-
-	Matrix<dble> MAT_DBLE_A(2, 2, 0), MAT_DBLE_A_INV(2, 2, 0), MAT_DBLE_A_norm(2, 2, 0);
-	MAT_DBLE_A.setValue(0, 0, 2); MAT_DBLE_A.setValue(0, 1, 3);
-	MAT_DBLE_A.setValue(1, 0,-1); MAT_DBLE_A.setValue(1, 1, 0);
-
-	std::cout << "\n\tMAT_DBLE_A\n";
-	std::cout << MAT_DBLE_A << "\n";
-
-	MAT_DBLE_A_INV = MAT_DBLE_A.inv();
-	std::cout << "\n\tMAT_DBLE_A_INV\n";
-	std::cout << MAT_DBLE_A_INV << "\n";
-
-	std::cout << "\tMAT_DBLE_A_INV.isDiagonal() = " << MAT_DBLE_A_INV.isDiagonal() << "\n";
-
-	std::cout << "\tMAT_DBLE_A.getElementMaxOf('r', 0) = " << MAT_DBLE_A.getElementMaxOf('r', 0) << "\n";
-	std::cout << "\tMAT_DBLE_A.getElementMaxOf('c', 1) = " << MAT_DBLE_A.getElementMaxOf('c', 0) << "\n";
-	
-	MAT_DBLE_A_norm = MAT_DBLE_A.renormalization();
-	MAT_DBLE_A_norm.print("MAT_DBLE_A_norm = ");
-	
-
-
-	std::cout << "\n\n\n";
-
-
-
-	Matrix<dble> MAT_DBLE_B = MAT_DBLE_A;
-	std::cout << "\n\tMAT_DBLE_B\n";
-	std::cout << MAT_DBLE_B << "\n";
-
-
-	/*
-	std::vector<Matrix<int>> v_MAT_INT_A;
-	std::fill(v_MAT_INT_A.begin(), v_MAT_INT_A.end(), std::rand());
-	*/
-
-	Matrix<int> MAT_INT_B(2, 6, std::rand()), MAT_INT_C(3, 4, 0), MAT_INT_D(1, 12, 0);
-	std::cout << MAT_INT_B<< "\n";
-
-	MAT_INT_B = MAT_INT_B.random();
-	MAT_INT_B.print("MAT_INT_B = ");
-
-	MAT_INT_C = MAT_INT_B.reshape(3, 4);
-	MAT_INT_C.print("MAT_INT_C = reshape(MAT_INT_B) = ");
-
-
-	MAT_INT_D = MAT_INT_B.reshape(1, 12);
-	MAT_INT_D.print("MAT_INT_D = reshape(MAT_INT_B) = ");
-
-
-
-
-
-
-	std::cout << "\n\n\n";
-
-	//std::cout << MAT_AAA << "\n";
-
-	
-	
-	/////////Matrix<int> MAT_F = MAT_D * MAT_E;
-	/*
-	MAT_E = MAT_D * MAT_D;
-	MAT_F.print("MAT_C = ");*/
-
-
-	/* test SOLVE par methode directe GAUSS */
-	typedef Matrix<dble> type_mat_dble, type_vec_dble;
-
-
-	type_mat_dble mat_AA(3, 3, 0);
-	type_vec_dble vec_bb(3, 1, 0), vec_x(3, 1, 0), vec_delta(3,1,0);
-
-	mat_AA.setValue(0, 0, 2); mat_AA.setValue(0, 1, 8); mat_AA.setValue(0, 2, 4);
-	mat_AA.setValue(1, 0, 2); mat_AA.setValue(1, 1, 10); mat_AA.setValue(1, 2, 6);
-	mat_AA.setValue(2, 0, 1); mat_AA.setValue(2, 1, 8); mat_AA.setValue(2, 2, 2);
-
-	std::cout << mat_AA << "\n";
-
-	vec_bb.setValue(0, 0, 1); 
-	vec_bb.setValue(1, 0, 1); 
-	vec_bb.setValue(2, 0, 1);
-
-	std::cout << vec_bb << "\n";
-
-	vec_x = solve(mat_AA, vec_bb);
-	std::cout << "\nvec_x = "<< "\n";
-	std::cout << vec_x << "\n";
-
-
-	
-	
-
-	/*
-	* test
-	*/
-	vec_delta = mat_AA * vec_x;
-	std::cout << vec_delta << "\n";
-
-
-
-
-	Matrix<float>comp;
-	std::cout << comp << "\n";
-
-
-	Vector<dble> vx(3, 0.2), vy(3, 0.1);
-	std::cout << vx << "\n";
-	std::cout << vy << "\n";
-
-	vx.setValue(0, 1); vx.setValue(1, -1); vx.setValue(2, 2);
-	std::cout << vx << "\n";
-	vy.setValue(0, -1); vy.setValue(1, 4); vy.setValue(2, 3);
-	std::cout << vy << "\n";
-	std::cout << "\tdot product = \n";
-	std::cout << vx.operator,(vy) << "\n";
-
-
-	std::cout << "\tcross product = \n";
-	Vector<dble>w(3, 0);
-	w = vx ^ vy;
-	std::cout << w << "\n";
-	
-	/*
-	vx.setValue(0, 0); vx.setValue(1,3); vx.setValue(2, 4); 	
-	std::cout << vx.normL2() << "\n";
-	*/
-
-
-	std::cout << "\tnorm 1" << "\n";
-	std::cout << mat_AA.norm_1() << "\n";
-	std::cout << "\tnorm 2" << "\n";
-	std::cout << mat_AA.norm_2() << "\n";
-
-
-
-	/*
-	Matrix<dble> A1(2, 2, 0);
-	A1.setValue(0, 0, 1); A1.setValue(0, 1, -2);
-	A1.setValue(1, 0, 0); A1.setValue(1, 1, 3);
-	std::cout << A1 << "\n";
-	Vector<dble> b1(2, 1), x1(2,0);
-	std::cout << b1 << "\n";
-	std::cout << x1 << "\n";
-
-	LINALG::MethodDirect<dble> met_directe;
-	x1 = met_directe.pivotDeGauss(A1, b1);
-	std::cout << x1 << "\n";
-	*/
-
-	
-
-	Matrix<dble> A1(2, 2, 0);
-	A1.setValue(0, 0, 1); A1.setValue(0, 1, -2);
-	A1.setValue(1, 0, 0); A1.setValue(1, 1, 3);
-	Vector<dble> b1(2, 1);
-	
-	enum METHNUM {PIVOT=1, DICO=2, DEFAULT};
-	switch (DICO)
+	enum METHNUM {PIVOT=1, DICO=2, NEWTONRAPH=3, GC=4, DEFAULT};
+	switch (GC)
 	{
-		case PIVOT:
+		case 1:
 		{
 			std::cout << "\n\tmethode du pivot." << "\n";
+			Matrix<dble> A1(2, 2, 0), inv_A1(2, 2, 0);
+			A1.setValue(0, 0, 2); A1.setValue(0, 1,-1);
+			A1.setValue(1, 0,-1); A1.setValue(1, 1, 1);
+			A1.print("A=");
+			//inv_A1 = A1.inv();
+			//std::cout << inv_A1<< "\n";
+			Matrix<dble> b1(2, 1, 0);
+			b1.setValue(0, 0, 1);
+			b1.setValue(1, 0, 0);
+			b1.print("b=");
 			methods::systLin::direct::Pivot<dble> Piv(A1, b1);
 			break;
 		}
-		case DICO:
+		
+		case 2:
 		{
 			std::cout << "\n\tmethode de la dichotomie." << "\n";
-			methods::solveEquations::Dichotomie Dico(1.0, 2.0, 1e-6, 100);
+			methods::solveEquations::Dichotomie<dble> Dico(1.0, 2.0, 1e-6, 100);
+			break;
+		}
+		
+		case 3:
+		{		
+			std::cout << "\n\tmethode de Newton-Raphson." << "\n";
+			Matrix<dble> A(2, 2, 0), B(2, 1, 0), X(2, 1, 0);
+			dble xi = {  2.0 };
+			dble yi = { -2.0 };//on suppose uniforme
+			B.setValue(0, 0, f1(xi, yi));
+			B.setValue(1, 0, f2(xi, yi));
+			B.print("B = ");
+			A.setValue(0, 0, a11(xi, yi)); A.setValue(0, 1, a12(xi, yi));
+			A.setValue(1, 0, a21(xi, yi)); A.setValue(1, 1, a22(xi, yi));
+			A.print("A = ");
+			X.setValue(0, 0, 2);
+			X.setValue(1, 0, -2);
+			X.print("X0 = ");
+			std::system("pause");
+			methods::solveEquations::NewtonRaphson<dble> NewtonRaph(A, B, X);
+			break;
+		}
+		case 4:
+		{
+			std::cout << "\n\tmethode du gradient conjugue." << "\n";
+			//methods::solveEquations::Dichotomie<dble> Dico(1.0, 2.0, 1e-6, 100);
 			break;
 		}
 		default:
@@ -887,6 +672,9 @@ int	main(void)
 			break;
 		}
 	}
+
+
+
 
 
 

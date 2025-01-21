@@ -85,6 +85,8 @@ public:
         : _rows(rows), _cols(cols), x(_rows* _cols, initValue) {}
 
     //Matrix(const Matrix<T>& mat) :_rows(mat._rows), _cols(mat._cols), x(_rows* _cols, 0) {}; //Matrix copy constructor
+
+    /*
     Matrix<T>& operator=(const Matrix<T>& mat)// Matrix copy assignment
     {
         if (this != &mat) {  // Vérification de l'auto-affectation
@@ -93,19 +95,24 @@ public:
             this->x = mat.x; // Copier les données (selon votre structure)
         }
         return *this; // Retourner l'objet courant
-    }
+    }*/
+
+    Matrix<T>& operator=(const Matrix<T>& mat) = default;
 
     T& operator()(size_t i, size_t j);
     bool operator==(const Matrix<T>& mat);// compare les matrices élément par élément
     auto operator<=>(const Matrix<T>& tab)const = default;
 
     Matrix<T> operator+(const Matrix<T>& mat);
+    //Matrix<T> operator+(Matrix<T>& mat);
     Matrix<T>& operator+=(const Matrix<T>& mat);
     Matrix<T> operator-(const Matrix<T>& mat);
+    Matrix<T> operator-(Matrix<T>& mat);
     Matrix<T>& operator-=(const Matrix<T>& mat);
     
     Matrix<T> operator*(Matrix<T>& mat);
     Matrix<T> operator/(const T& c)const;
+    Matrix<T> operator/(T& c);
     Matrix<T> operator/=(const T& c);
 
 
@@ -116,9 +123,11 @@ public:
     Matrix<T> ones();
     Matrix<T> zeros();
 
+    friend Matrix<T> operator-(Matrix<T> mat);
     friend Matrix<T> operator*(const Matrix<T>& mat1, const Matrix<T>& mat2);
     friend Matrix<T> operator*(long c, const Matrix<T>& mat2);
     friend Matrix<T> operator*(const Matrix<T>& mat2, long c);
+    //friend Matrix<T> operator*(Matrix<T>& mat2, double c);
 
 
     void setValue(size_t i, size_t j, T val);
@@ -186,218 +195,21 @@ public:
     T getElementMaxOf(char choice, int number);//find most important values ​​from rows.
 
 
-
-};
-
-
-template<typename T>
-class Vector:public Matrix<T>
-{
-private:
-    size_t _rows{ 3 }, _cols{ 1 };//by default
-    std::vector<T> x{ 3 * 1, 0 };
-public:
-    Vector(/**/) :Matrix<T>(3, 1, 0) {};
-    Vector(size_t rows, T initValue = T()) : _rows(rows), x(_rows * 1, initValue) {};   
-    Vector<T>& operator=(const Vector<T>& vec) = default;
-
-    Vector<T> operator+(const Vector<T>& vec);
-    Vector<T>& operator+=(const Vector<T>& vec);
-    Vector<T> operator-(const Vector<T>& vec);
-    Vector<T>& operator-=(const Vector<T>& vec);
-    Vector<T> operator*(Vector<T>& vec);
-    Vector<T> operator/(const T& c)const;
-    Vector<T> operator/=(const T& c);
-
-    T& operator()(size_t i);
-    T operator,(Vector<T>& vec);//dot product 
-    Vector<T> operator^(Vector<T>& vec);//cross product (dim vector vec is equal to 3.)
-    bool operator==(const Vector<T>& vec);// compare les matrices élément par élément
-    auto operator<=>(const Vector<T>& vec)const = default;   
-    
-    
+    //operator special si Matrix<T> est une matrice de dim(m,1) ou dim(1,n)
     T normL2();
+    T& operator()(size_t i);
+    T operator,(Matrix<T>& vec);//dot product 
+    Matrix<T> operator^(Matrix<T>& vec);//cross product (dim vector vec is equal to 3.)
 
-    template<class U>
-    friend std::ostream& operator<<(std::ostream& f, Vector<U>& vec);
 
-    T getValue(size_t i);
-    void setValue(size_t i, T val);
-    int getRows() { return _rows; }
-    int getCols() { return _cols; }
 
 };
-
-/* VECTOR<T> */
-
-
-template<typename T>
-T Vector<T>::getValue(size_t i)
-{
-    assert(i < this->getRows());
-    return this->x[i];
-}
-
-
-
-template<typename T>
-Vector<T> Vector<T>::operator+(const Vector<T>& vec)
-{
-    assert(this->getRows() == vec.getRows());
-    Vector<T>tmp(vec.getRows(), 0);
-    for (int i = 0; i < this->getRows(); i++)
-    {
-        tmp.x[i] = this->x[i] + vec.x[i]; 
-    }
-    return tmp;
-}
-
-template<typename T>
-Vector<T>& Vector<T>::operator+=(const Vector<T>& vec)
-{
-    assert(this->getRows() == vec.getRows());
-    for (int i = 0; i < this->getRows(); i++)
-    {
-        x[i] += vec.x[i];
-    }
-    return (*this);
-}
-
-template<typename T>
-Vector<T> Vector<T>::operator-(const Vector<T>& vec)
-{
-    assert(this->getRows() == vec.getRows());
-    Vector<T>tmp(vec.getRows(), 0);
-    for (int i = 0; i < this->getRows(); i++)
-    {
-        tmp.x[i] = this->x[i] - vec.x[i];
-    }
-    return tmp;
-}
-
-template<typename T>
-Vector<T>& Vector<T>::operator-=(const Vector<T>& vec)
-{
-    assert(this->getRows() == vec.getRows());
-    for (int i = 0; i < this->getRows(); i++)
-    {
-        x[i] -= vec.x[i];
-    }
-    return (*this);
-}
-
-template<typename T>
-Vector<T> Vector<T>::operator*(Vector<T>& vec)
-{
-    assert(this->getRows() == vec.getRows());
-    Vector<T>tmp(vec.getRows(), 0);
-    for (size_t i = 0; i < vec.getRows(); i++)
-    {
-        tmp.x[i] = this->x[i] * vec.x[i];
-    }
-    return tmp;
-}
-
-template<typename T>
-Vector<T> Vector<T>::operator / (const T & c)const
-{
-    Vector<T>tmp(this->getRows(), 0);
-    for (size_t i = 0; i < this->getRows(); i++)
-    {
-        tmp.x[i] = this->x[i] / c;
-    }
-    return tmp;
-}
-
-
-template<typename T>
-Vector<T> Vector<T>::operator/=(const T& c)
-{
-    for (size_t i = 0; i < this->getRows(); i++)
-    {
-        this->x[i] /= c;
-    }
-    return (*this);
-}
-
-
-
-
-
-template<typename T>
-T Vector<T>::operator,(Vector<T>& vec)
-{
-    assert(this->getRows() == vec.getRows());
-    T val = { 0 };
-    for (size_t i=0;i<vec.getRows();i++)
-    {
-        val += this->x[i] * vec.x[i];
-    }
-    return val;
-}
-
-template<typename T>
-Vector<T> Vector<T>::operator^(Vector<T>& vec)
-{
-    assert(this->getRows() == vec.getRows() == 3);
-    Vector<T>tmp(3,0);
-    tmp.x[0] = this->x[1] * vec.x[2] - this->x[2] * vec.x[1];
-    tmp.x[1] = this->x[2] * vec.x[0] - this->x[0] * vec.x[2];
-    tmp.x[2] = this->x[0] * vec.x[1] - this->x[1] * vec.x[0];
-    return tmp;
-}
-
-
-template<typename U>
-std::ostream& operator<<(std::ostream& f, Vector<U>& vec)
-{
-    f << "\n";
-    for (size_t i = 0; i < vec.getRows(); i++)
-    {
-            f << "\t" << vec.x[i] << "\n";
-    }
-    f << "\n";
-    return f;
-}
-
-template<typename T>
-T Vector<T>::normL2()
-{
-    T sum(0);
-    for (auto val : x)
-    {
-        sum += val * val;
-    }
-    return sqrt(sum);
-}
-
-template<typename T>
-void Vector<T>::setValue(size_t i, T val)
-{
-    assert(i < this->getRows());
-    x[i] = val;
-}
-
-template<typename T>
-T& Vector<T>::operator()(size_t i)
-{
-    assert(i < this->getRows());
-    return x[i];
-}
-
-
-
-
-
-
 
 
 
 
 
 /* MATRIX<T> */
-
-
 
 template<typename T>
 T Matrix<T>::getSumElementsOfColumn(int& col)
@@ -456,12 +268,24 @@ T Matrix<T>::getElementMaxOf(char choice, int number)//find most important value
         break;
     default:
         // code block
-        std::cerr << "Le premier paramètre doit être 'r' (ligne) ou 'c' (colonne).\n";
+        std::cerr << "Le premier parametre doit etre 'r' (ligne) ou 'c' (colonne).\n";
     } 
     return val;    
 }
 
 
+
+template<typename T>
+T Matrix<T>::normL2()
+{
+    assert(this->getCols() == 1);
+    T sum{ 0 };
+    for (size_t i = 0; i < this->getRows(); i++)
+    {
+        sum += this->getValue(i, 0) * this->getValue(i, 0);
+    }
+    return sqrt(sum);
+}
 
 
 template<typename T>
@@ -817,6 +641,7 @@ T Matrix<T>::det(Matrix<T>& mat1)
         for (int i = 0; i < mat1.getRows(); i++)
         {
             mat2 = mat2.rowDeletion(mat1, i, 0);//suivant les lignes
+            //x += std::pow(-1.0, i) * mat1.getValue(i, 0) * det(mat2);
             x += mat1.expo(i) * mat1.getValue(i, 0) * det(mat2);
         }
         return x;
@@ -943,20 +768,40 @@ Matrix<T> Matrix<T>::operator+(const Matrix<T>& mat)
 
 
 
+
+
 template<typename T>
 Matrix<T> Matrix<T>:: operator-(const Matrix<T>& mat)
 {
+    assert(mat.getRows() == this->getRows());
+    assert(mat.getCols() == this->getCols());
     Matrix<T> temp(this->getRows(), this->getCols(), 0);
     for (size_t i = 0; i < mat.getRows(); i++)
     {
         for (size_t j = 0; j < mat.getCols(); j++)
         {
-            if (i >= this->_rows || j >= this->_cols)
-            {
-                throw std::out_of_range("Index hors limite !");
-            }
             size_t k = i * this->_cols + j;
-            temp.x[k] = x[k] - mat.x[k];
+            temp.x[k] = this->x[k] - mat.x[k];
+        }
+    }
+    return temp;
+}
+
+
+template<typename T>
+Matrix<T> Matrix<T>:: operator-(Matrix<T>& mat)
+{
+    assert(mat.getRows() == this->getRows());
+    assert(mat.getCols() == this->getCols());
+    Matrix<T> temp(this->getRows(), this->getCols(), 0);
+    for (size_t i = 0; i < mat.getRows(); i++)
+    {
+        for (size_t j = 0; j < mat.getCols(); j++)
+        {
+            dble val = this->getValue(i, j) - mat.getValue(i, j);
+            temp.setValue(i, j, val);
+            //size_t k = i * this->_cols + j;
+            //temp.x[k] = x[k] - mat.x[k];
         }
     }
     return temp;
@@ -986,16 +831,18 @@ std::ostream& operator<<(std::ostream& f, Matrix<T>& mat)
 template<typename T>
 Matrix<T> Matrix<T>:: operator*(Matrix<T>& mat)
 {
-    Matrix<T> temp(this->getRows(), this->getCols(), 0);
+    assert(mat.getRows() == this->getCols());
+    Matrix<T> temp(this->getRows(), mat.getCols(), 0);
     for (size_t i = 0; i < this->getRows(); i++)
     {
         for (size_t j = 0; j < mat.getCols(); j++)
         {
-            temp(i, j) = 0.0;
+            double val{ 0 };
             for (size_t k = 0; k < this->getCols(); k++)
             {
-                temp(i, j) += this->getValue(i, k) * mat(k, j);
+                val += this->getValue(i, k) * mat.getValue(k, j);
             }
+            temp.setValue(i, j, val);
         }
     }
     return temp;
@@ -1005,26 +852,40 @@ Matrix<T> Matrix<T>:: operator*(Matrix<T>& mat)
 template<typename T>
 Matrix<T> Matrix<T>:: operator/(const T& c)const
 {
-    if (c == 0)
-    {
-        std::cerr << "\tZeroDivisionError ! " << "\n";
-        exit(-1);
-    }
+    assert(c != 0);
     Matrix<T> temp(*this);
     for (size_t i = 0; i < this->_rows; i++)
     {
         for (size_t j = 0; j < this->_cols; j++)
         {
-            if (i >= _rows || j >= this->_cols)
-            {
-                throw std::out_of_range("Index hors limite !");
-            }
             size_t k = i * this->_cols + j;
+            //dble val = this->getValue(i, j);
+            //val = val / c;
+            //temp.setValue(i, j, val);
             temp.x[k] = x[k] / c;
         }
     }
     return temp;
 }
+
+
+template<typename T>
+Matrix<T> Matrix<T>:: operator/(T& c)
+{
+    assert(c != 0);
+    Matrix<T> temp(*this);
+    for (size_t i = 0; i < this->_rows; i++)
+    {
+        for (size_t j = 0; j < this->_cols; j++)
+        {
+            dble val = this->getValue(i, j);
+            //val = val / c;
+            temp.setValue(i, j, val/c);
+        }
+    }
+    return temp;
+}
+
 
 template<typename T>
 Matrix<T> Matrix<T>::operator/=(const T& c)
@@ -1092,9 +953,6 @@ Matrix<T> Matrix<T>:: zeros()
 template<typename T>
 T Matrix<T>::getValue(size_t i, size_t j)
 {
-    if (i >= this->_rows || j >= this->_cols) {
-        throw std::out_of_range("Index hors limite !");
-    }
     size_t k = i * _cols + j;
     return x[k];
 }
@@ -1103,10 +961,7 @@ T Matrix<T>::getValue(size_t i, size_t j)
 
 template<typename T>
 void Matrix<T>::setValue(size_t i, size_t j, T val)
-{
-    if (i >= this->_rows || j >= this->_cols) {
-        throw std::out_of_range("Index hors limite !");
-    }
+{ 
     size_t k = i * this->_cols + j;
     x[k] = val;
 }
@@ -1224,6 +1079,78 @@ Matrix<T> operator*(Matrix<T>& mat2, T c)
     }
     return temp;
 }
+
+
+/*
+
+template<typename T>
+Matrix<T> operator*(Matrix<T>& mat2, double c)
+{
+    Matrix<T> temp(mat2.getRows(), mat2.getCols(), 0);
+    for (size_t i = 0; i < mat2.getRows(); i++)
+    {
+        for (size_t j = 0; j < mat2.getCols(); j++)
+        {
+            double val = this->getValue(i, j) * c;
+            temp.setValue(i, j, val);
+        }
+    }
+    return temp;
+}
+
+*/
+
+
+
+
+
+
+
+
+/*
+* ici: PARTIE SPECIALE
+* //operator special si Matrix<T> est une matrice de dim(m,1) ou dim(1,n)
+*/
+
+template<typename T>
+T& Matrix<T>::operator()(size_t i)
+{
+    assert(this->getCols() == 1);
+    assert(i < this->getRows());
+    return this->getValue(i, 0);
+}
+
+template<typename T>
+T Matrix<T>::operator,(Matrix<T>& vec)//dot product 
+{
+    assert(this->getRows() == vec.getRows());
+    assert(this->getCols == vec.getCols == 1);
+    T val = { 0 };
+    for (size_t i = 0; i < vec.getRows(); i++)
+    {
+        val += this->getValue(i, 0) * vec.getValue(i, 0);
+    }
+    return val;
+}
+
+template<typename T>
+Matrix<T> Matrix<T>::operator^(Matrix<T>& vec)//cross product (dim vector vec is equal to 3.)
+{
+    assert(this->getRows() == vec.getRows() == 3);
+    assert(this->getCols == vec.getCols == 1);
+    Matrix<T>tmp(3, 1, 0);
+    tmp.x[0] = this->x[1] * vec.x[2] - this->x[2] * vec.x[1];
+    tmp.x[1] = this->x[2] * vec.x[0] - this->x[0] * vec.x[2];
+    tmp.x[2] = this->x[0] * vec.x[1] - this->x[1] * vec.x[0];
+    return tmp;
+}
+
+
+
+
+
+
+
 
 
 
