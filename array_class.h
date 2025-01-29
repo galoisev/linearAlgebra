@@ -97,23 +97,30 @@ public:
         return *this; // Retourner l'objet courant
     }*/
 
-    Matrix<T>& operator=(const Matrix<T>& mat) = default;
+    Matrix<T>& operator=(const Matrix<T>& mat) = default;//copy by assignment
 
-    T& operator()(size_t i, size_t j);
+
     bool operator==(const Matrix<T>& mat);// compare les matrices élément par élément
     auto operator<=>(const Matrix<T>& tab)const = default;
 
-    Matrix<T> operator+(const Matrix<T>& mat);
-    //Matrix<T> operator+(Matrix<T>& mat);
+        
     Matrix<T>& operator+=(const Matrix<T>& mat);
-    Matrix<T> operator-(const Matrix<T>& mat);
-    Matrix<T> operator-(Matrix<T>& mat);
+    Matrix<T> operator+(const Matrix<T>& mat);
+    Matrix<T> operator+(Matrix<T>& mat);    
     Matrix<T>& operator-=(const Matrix<T>& mat);
-    
+    Matrix<T> operator-(const Matrix<T>& mat);    
+    Matrix<T> operator-(Matrix<T>& mat);    
+    Matrix<T> operator*=(const T& c);
     Matrix<T> operator*(Matrix<T>& mat);
-    Matrix<T> operator/(const T& c)const;
-    Matrix<T> operator/(T& c);
+    Matrix<T> operator*(T& c);
     Matrix<T> operator/=(const T& c);
+    Matrix<T> operator/(T& c);
+    Matrix<T> operator/(const T& c)const;
+    
+    
+    //Matrix<T> operator/(Matrix<T>& vec);
+
+    T& operator()(size_t i, size_t j);
 
 
     Matrix<T> transpose();
@@ -143,6 +150,8 @@ public:
     bool isHessenberg();//todo
     bool isToeplitz();//todo
 
+    bool isDiagonalDominant(size_t& i);
+
     Matrix<T> renormalization();
 
     Matrix<T> transformation(char& axis, dble& angle_RAD);
@@ -154,6 +163,8 @@ public:
     size_t getRows() const { return this->_rows; }
     size_t getCols() const { return this->_cols; }
 
+    void setSizeRows(size_t m) { _rows = m; }
+    void setSizeCols(size_t n) { _cols = n; }
 
   
     friend std::ostream& operator<<(std::ostream& f, Matrix<T>& mat)
@@ -210,6 +221,63 @@ public:
 
 
 /* MATRIX<T> */
+
+/*
+template<typename T>
+Matrix<T>& Matrix<T>::operator=(const Matrix<T>& mat)
+{
+    return (*this);
+}*/
+
+
+template<typename T>
+bool Matrix<T>::isDiagonalDominant(size_t& i)
+{
+    bool test = { true };//on suppose que la matrice A est a diagonal dominante !
+    T sum_j{ 0.0 };
+    for (size_t j = 0; j < this->getCols(); j++)
+    {
+        if (i != j)
+        {
+            sum_j += std::abs(this->getValue(i, j));
+        }        
+    }
+    if (std::abs(this->getValue(i, i)) <= sum_j)
+        test = false;
+    return test;
+}
+
+
+template<typename T>
+Matrix<T> Matrix<T>:: operator*(T& c)
+{
+    Matrix<T> temp(*this);
+    for (size_t i = 0; i < this->_rows; i++)
+    {
+        for (size_t j = 0; j < this->_cols; j++)
+        {
+            dble val = this->getValue(i, j);
+            temp.setValue(i, j, val * c);
+        }
+    }
+    return temp;
+}
+
+/*
+template<typename T>
+Matrix<T> Matrix<T>::operator/(Matrix<T>& vec)
+{
+    assert(this->getRows() == vec.getRows());
+    assert(this->getCols() == vec.getCols());
+    Matrix<T>temp(vec.getRows(), vec.getCols());
+    for (size_t i = 0; i < this->getRows(); i++)
+    {
+        assert(vec.getValue(i, 0) != 0);
+        T val = this->getValue(i, 0) / vec.getValue(i, 0);
+        temp.setValue(i, 0, val);
+    }
+    return temp;
+}*/
 
 template<typename T>
 T Matrix<T>::getSumElementsOfColumn(int& col)
@@ -747,20 +815,36 @@ T& Matrix<T>::operator()(size_t i, size_t j)
 }
 
 
+
 template<typename T>
 Matrix<T> Matrix<T>::operator+(const Matrix<T>& mat)
 {
+    assert(mat.getCols() == this->getCols());
+    assert(mat.getRows() == this->getRows());
     Matrix<T> temp(this->getRows(), this->getCols(), 0);
     for (size_t i = 0; i < mat.getRows(); i++)
     {
         for (size_t j = 0; j < mat.getCols(); j++)
         {
-            if (i >= this->_rows || j >= this->_cols)
-            {
-                throw std::out_of_range("Index hors limite !");
-            }
-            size_t k = i * _rows + j;
+            size_t k = i * mat.getCols() + j;
             temp.x[k] = x[k] + mat.x[k];
+        }
+    }
+    return temp;
+}
+
+template<typename T>
+Matrix<T> Matrix<T>::operator+(Matrix<T>& mat)
+{
+    assert(mat.getRows() == this->getRows());
+    assert(mat.getCols() == this->getCols());
+    Matrix<T> temp(this->getRows(), this->getCols(), 0);
+    for (size_t i = 0; i < mat.getRows(); i++)
+    {
+        for (size_t j = 0; j < mat.getCols(); j++)
+        {
+            dble val = this->getValue(i, j) + mat.getValue(i, j);
+            temp.setValue(i, j, val);
         }
     }
     return temp;
@@ -800,8 +884,6 @@ Matrix<T> Matrix<T>:: operator-(Matrix<T>& mat)
         {
             dble val = this->getValue(i, j) - mat.getValue(i, j);
             temp.setValue(i, j, val);
-            //size_t k = i * this->_cols + j;
-            //temp.x[k] = x[k] - mat.x[k];
         }
     }
     return temp;
@@ -902,6 +984,21 @@ Matrix<T> Matrix<T>::operator/=(const T& c)
     return (*this);
 }
 
+template<typename T>
+Matrix<T> Matrix<T>::operator*=(const T& c)
+{
+    assert(c != 0);
+    for (size_t i = 0; i < _rows; i++)
+    {
+        for (size_t j = 0; j < _cols; j++)
+        {
+            size_t k = i * this->_cols + j;
+            this->x[k] *= c;
+        }
+    }
+    return (*this);
+}
+
 
 
 
@@ -953,17 +1050,23 @@ Matrix<T> Matrix<T>:: zeros()
 template<typename T>
 T Matrix<T>::getValue(size_t i, size_t j)
 {
-    size_t k = i * _cols + j;
+    if (i >= this->_rows)
+    {
+        throw std::out_of_range("Index hors limite !");
+    }
+    size_t k = i * this->_cols + j;
     return x[k];
 }
 
 
 
-template<typename T>
+template <typename T>
 void Matrix<T>::setValue(size_t i, size_t j, T val)
-{ 
-    size_t k = i * this->_cols + j;
-    x[k] = val;
+{
+    assert((i >= 0) && (i < _rows));
+    assert((j >= 0) && (j < _cols));
+    size_t k = i * _cols + j;
+    x[k] = val; // Accès sécurisé
 }
 
 
@@ -1124,7 +1227,7 @@ template<typename T>
 T Matrix<T>::operator,(Matrix<T>& vec)//dot product 
 {
     assert(this->getRows() == vec.getRows());
-    assert(this->getCols == vec.getCols == 1);
+    assert(this->getCols() == vec.getCols() == 1);
     T val = { 0 };
     for (size_t i = 0; i < vec.getRows(); i++)
     {
@@ -1137,7 +1240,7 @@ template<typename T>
 Matrix<T> Matrix<T>::operator^(Matrix<T>& vec)//cross product (dim vector vec is equal to 3.)
 {
     assert(this->getRows() == vec.getRows() == 3);
-    assert(this->getCols == vec.getCols == 1);
+    assert(this->getCols() == vec.getCols() == 1);
     Matrix<T>tmp(3, 1, 0);
     tmp.x[0] = this->x[1] * vec.x[2] - this->x[2] * vec.x[1];
     tmp.x[1] = this->x[2] * vec.x[0] - this->x[0] * vec.x[2];

@@ -30,7 +30,7 @@ namespace methods
 				Matrix<T> b, x;
 				Pivot(Matrix<T>& AA, Matrix<T>& bb) :A(AA), b(bb)
 				{
-					std::cout << "\n\tLa solution x du système A*x = b est: " << "\n";
+					std::cout << "\n\tLa solution x du systeme A*x = b est: " << "\n";
 					solve();					
 				}//end pivot
 				Pivot& operator=(const Pivot& pivot) = default;
@@ -117,16 +117,74 @@ namespace methods
 				virtual void solve() = 0;
 			}; //end class NumAnalysis
 			template<typename T>
-			class GC :public NumAnalysis<T>
+			class GradientConjugue :public NumAnalysis<T>
 			{
 			private:
 			public:
+				double tolerance{ 1.e-9 };
+				int max_iter{ 100 };
 				Matrix<T> A;
 				Matrix<T> b, x;
-				GC(Matrix<T>& AA, Matrix<T>& bb) :A(AA), b(bb)
-				{
-					std::cout << "\n\tLa solution x du système A*x = b est: " << "\n";
+				GradientConjugue(Matrix<T>& AA, Matrix<T>& bb, Matrix<T> xx) :A(AA), b(bb), x(xx)
+				{					
+					std::cout << "\n\tLa solution x du systeme A*x = b est: " << "\n";
 					solve();
+				}
+				virtual void solve()
+				{
+					Matrix<T>x0(2, 1, 0), x1(2, 1, 0), r0(2, 1, 0), r1(2, 1, 0), p0(2, 1, 0), p1(2, 1, 0), q0(2, 1, 0), q1(2, 1, 0);
+					T alpha0{ 0.0 }, alpha1{ 0.0 }, beta0{ 0.0 }, beta1{ 0.0 }, gamma0{ 0.0 }, mu0{ 0.0 }, gamma1{ 0.0 }, mu1{ 0.0 };
+					int m = A.getRows();
+					int n = A.getCols();
+					Matrix<T>x(n, 1, 0);
+					if (!A.isSymetric())
+					{
+						std::cerr << "\tThe matrix A must be both positive definite and symmetric !" << "\n";
+						std::system("pause");
+						std::exit(1);
+					}
+
+					x = this->x;
+					A = this->A;
+					b = this->b;
+
+
+					x0 = x;					
+					r0 = b - A * x0;
+					p0 = r0;
+
+					T ecart{ 1.e12 };
+					int iter = { 0 };
+					do
+					{
+						gamma0 = r0.operator,(r0);
+						q0 = A * p0;
+
+						alpha1 = (r0, r0) * (1. / (p0, q0));
+						x1 = x0 + p0 * alpha1;
+
+						r1 = r0 - (A * p0) * alpha1;
+						beta1 = (r1, r1) * (1. / (r0, r0));
+
+						p1 = r1 + p0 * beta1;
+						if (iter > this->max_iter)
+						{
+							std::cout << "\tnombre iteration max est depasse !" << "\n";
+							break;
+						}
+
+						ecart = r0.normL2();
+
+						/*MaJ*/						
+						x0 = x1;
+						r0 = b - A * x0;
+						p0 = r0;
+						iter++;
+
+					} while ((ecart > this->tolerance) && (iter < max_iter));
+					
+					x = x0;
+					x.print("x=");
 				}
 			};
 
@@ -137,6 +195,42 @@ namespace methods
 
 		namespace iter
 		{
+			template<typename T>
+			class NumAnalysis
+			{
+			public:
+				virtual void solve() = 0;
+			}; //end class NumAnalysis
+
+			template<typename T>
+			class Jacobi :public NumAnalysis<T>
+			{
+			private:
+			public:
+				double tolerance{ 1.e-9 };
+				int max_iter{ 100 };
+				Matrix<T> A;
+				Matrix<T> b, x;
+				Jacobi(Matrix<T>& AA, Matrix<T>& bb, Matrix<T> xx) :A(AA), b(bb), x(xx)
+				{
+					std::cout << "\n\tLa solution x du systeme A*x = b est: " << "\n";
+					solve();
+				}
+				virtual void solve()
+				{
+					int m = A.getRows();
+					int n = A.getCols();
+					for (size_t i = 0; i < A.getRows(); i++)
+					{
+						if (!A.isDiagonalDominant(i))
+						{
+							std::cerr << "\tThe matrix A must be diagonal dominant !" << "\n";
+							std::system("pause");
+							std::exit(1);
+						}
+					}
+				}
+			};//end class Jacobi
 
 		}
 
