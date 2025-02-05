@@ -33,7 +33,9 @@
 
 #include "../array_class.h"
 #include "../numericalMethods.h"
-#include "../tenseur.h"
+
+#include "tenseur.h"
+
 
 
 
@@ -614,12 +616,40 @@ int	main(void)
 	std::system("PAUSE");
 
 
+	std::cout << "\n\n\n\ttenseur (vecteur, matrice,...) !\n";
+
+	typedef std::vector<LINALG::Tensor<double>*> typ_vect_dble;
+	typ_vect_dble* ptr_x;
+
+	ptr_x = new typ_vect_dble[10];
+
+	delete[] ptr_x;
+	ptr_x = 0;
+
+
+
+
+
+
+
+
+	LINALG::Vector<double>* ptr_Vector;
+	//ptr_Vector = new LINALG::Vector<double>[10];
+	//double* ptr_x = new double[10];
+
+
+
+
+	std::system("PAUSE");
+	std::system("cls");
+
+
 
 
 
 	
-	enum METHNUM {PIVOT=1, DICO=2, NEWTONRAPH=3, GC=4, JACOBI=5, DEFAULT};
-	switch (PIVOT)
+	enum METHNUM {PIVOT=1, DICO=2, NEWTONRAPH=3, GC=4, JACOBI=5, LU=6, DEFAULT};
+	switch (JACOBI)
 	{
 		case 1:
 		{
@@ -682,18 +712,52 @@ int	main(void)
 		case 5:
 		{
 			std::cout << "\n\tmethode de Jacobi." << "\n";
+			Matrix<dble> A(3, 3, 0), B(3, 1, 0), X(3, 1, 0);
+			A.setValue(0, 0, 4); A.setValue(0, 1, 2); A.setValue(0, 2, 1);
+			A.setValue(1, 0, -1); A.setValue(1, 1, 2); A.setValue(1, 2, 0);
+			A.setValue(2, 0, 2); A.setValue(2, 1, 1); A.setValue(2, 2, 4);
+			A.print("A=");
+			B.setValue(0, 0, 4);
+			B.setValue(1, 0, 2);
+			B.setValue(2, 0, 9);
+			B.print("B=");
+			X.setValue(0, 0, 0);
+			X.setValue(1, 0, 0);
+			X.setValue(2, 0, 0);
+			X.print("X0 = ");
+			methods::systLin::iter::Jacobi<dble> jacob(A, B, X);
+			//methods::solveEquations::Dichotomie<dble> Dico(1.0, 2.0, 1e-6, 100);
+			break;
+		}
+		case 6:
+		{
+			std::cout << "\n\tmethode PA = LU." << "\n";
+			/*
 			Matrix<dble> A(2, 2, 0), B(2, 1, 0), X(2, 1, 0);
 			A.setValue(0, 0, 2); A.setValue(0, 1, -1);
-			A.setValue(1, 0, -0.5); A.setValue(1, 1, 1);
+			A.setValue(1, 0, -1); A.setValue(1, 1, 1);
 			A.print("A=");
 			B.setValue(0, 0, 1);
 			B.setValue(1, 0, 0);
 			B.print("B=");
 			X.setValue(0, 0, 0);
 			X.setValue(1, 0, 0);
-			X.print("X0 = ");
-			methods::systLin::iter::Jacobi<dble> jacob(A, B, X);
-			//methods::solveEquations::Dichotomie<dble> Dico(1.0, 2.0, 1e-6, 100);
+			X.print("X0 = ");			
+			*/			
+			Matrix<dble> A(3, 3, 0), B(3, 1, 0), X(3, 1, 0);
+			A.setValue(0, 0, 4); A.setValue(0, 1, 2); A.setValue(0, 2, 1);
+			A.setValue(1, 0,-1); A.setValue(1, 1, 2); A.setValue(1, 2, 0);
+			A.setValue(2, 0, 2); A.setValue(2, 1, 1); A.setValue(2, 2, 4);
+			A.print("A=");
+			B.setValue(0, 0, 4);
+			B.setValue(1, 0, 2);
+			B.setValue(2, 0, 9);
+			B.print("B=");
+			X.setValue(0, 0, 0);
+			X.setValue(1, 0, 0);
+			X.setValue(2, 0, 0);
+			X.print("X0 = ");						
+			methods::systLin::direct::LU<dble> lu(A, B, X);
 			break;
 		}
 		default:
@@ -831,8 +895,6 @@ int	main(void)
 
 
 
-	std::system("PAUSE");
-
 	
 	fic = { "View_Factor_Matrix_" }, ext = { ".txt" };
 	filename = pathname + fic + folder + ext;
@@ -843,335 +905,9 @@ int	main(void)
 	
 
 
-	std::system("PAUSE");
-
-	
-	
-
-
-
-
-
-
-
-
-
-	/* !!!!!!!!!!!!!!!!!   à supprimer une fois que CalculsFacteurDeVue fonctionnera correctement !!!!!!!!!!!!!   */
-
-	nbre_ligne = list_maillages.size();
-	matd_viewFactor MAT_VF(nbre_ligne, nbre_ligne), MAT_Q(nbre_ligne, nbre_ligne);
-
-
-
-	std::cout << "\n\tVIEW FACTOR calculations in PROGRESS..." << "\n\n\n";
-	GMSH::Geo geo_i, geo_j;
-
-
-	val_f12 = { 0.0 };
-	i = { 0 };
-
-	int cpt_mesh_number = { 0 };
-	for (auto m1 : list_maillages)
-	{
-
-		std::string m1_msh = m1 + ".msh";
-		std::string m1_geo = m1 + ".geo";
-
-
-		N1 = {}; e1 = {}; T1 = {}; Q_rad = {}; Q_rad.delta_time = 3600.0;
-		geo_i.parsefile_geo(m1_geo);
-
-		geo_i.surfaceNumber = i;
-		N1 = geo_i.N;
-		e1 = geo_i.e;
-		T1 = geo_i.T;
-
-
-		GMSH::Mesh mesh1(m1_msh);
-
-		f12.area1 = mesh1.area;
-
-
-		//hx1 = { mesh1.hx }; hy1 = { mesh1.hy }; hx2 = { mesh2.hx }; hy2 = { mesh2.hy };
-		//f12.area1 = mesh1.area;
-
-
-		/*
-		Q_rad.Area_i = mesh1.area;
-		Q_rad.emissivity_i = e1;
-		Q_rad.T_i = T1;
-		*/
-
-
-
-		j = { 0 };
-		for (auto m2 : list_maillages)
-		{
-			/*
-			displayProgressBar(j, m2.size());//
-			std::this_thread::sleep_for(std::chrono::milliseconds(1500));  // Pause pour la simulation
-			*/
-
-
-			std::string m2_msh = m2 + ".msh";
-			std::string m2_geo = m2 + ".geo";
-
-			N2 = {}; e2 = {}; T2 = {};
-			geo_j.parsefile_geo(m2_geo);
-
-			geo_j.surfaceNumber = j;
-			N2 = geo_j.N;
-			e2 = geo_j.e;
-			T2 = geo_j.T;
-
-
-			GMSH::Mesh mesh2(m2_msh);
-
-			f12.area2 = mesh2.area;
-
-			/*
-			Q_rad.Area_j = mesh2.area;
-			Q_rad.emissivity_j = e2;
-			Q_rad.T_i = T2;
-			*/
-
-
-			/*
-			int nombreDeMaillesTotaleALire = m1.size() * m2.size();
-			//displayProgressBar(k, nombreDeMaillesTotaleALire, "READING MESH FILES in PROGRESS...");//
-			showProgressBar(k, nombreDeMaillesTotaleALire, "READING MESH FILES in PROGRESS...");
-			std::this_thread::sleep_for(std::chrono::milliseconds(2000));  // Pause pour la simulation
-			*/
-
-
-			if (j != i)
-			{
-				val_f12 = f12.calculs2(mesh1.list_ptr_nodes_cg, mesh2.list_ptr_nodes_cg);
-				f12.value = val_f12 * (mesh1.area / mesh1.list_elements.size()) * (mesh2.area / mesh2.list_elements.size());
-				f12.emitterNumber = { i }; f12.receiverNumber = { j };
-				f12.numberOfElements1 = mesh1.num_total_elements;
-				f12.numberOfElements2 = mesh2.num_total_elements;
-				f12.area1 = mesh1.area;
-				f12.area2 = mesh2.area;
-
-
-				MAT_VF.setValue(i, j, f12.value);
-
-				/*
-				Q_rad.Fij = Q_rad.radiation(f12.value);
-				MAT_Q.setValue(i, j, Q_rad.Fij);
-				std::cout << Q_rad << "\n";
-				*/
-
-				/*
-				std::cout << f12 << "\n";
-				std::system("PAUSE");
-				*/
-				showProgressBar(cpt_mesh_number, numberOfFiles, "READING MESH FILES in PROGRESS...");
-				std::this_thread::sleep_for(std::chrono::milliseconds(200));  // Pause pour la simulation
-				cpt_mesh_number++;
-			}
-			j++;
-
-		}
-		i++;
-
-		/*
-		std::this_thread::sleep_for(std::chrono::milliseconds(500));  // Pause pour la simulation
-		showProgressBar(k + 1, list_maillages.size(), message);
-		*/
-
-
-
-	}
-
-
-
-	std::system("cls");
-	std::cout << "\tVIEW FACTOR calculations DONE !" << "\n\n\n\n";
-	std::this_thread::sleep_for(std::chrono::milliseconds(2000));//pause de 2000 ms
-	std::system("cls");
-
-	/*
-	i = { 0 };
-	for (auto m1 : list_maillages)
-	{
-		std::string m1_msh = m1 + ".msh";
-		std::string m1_geo = m1 + ".geo";
-
-		geo_i.surfaceNumber = i;
-		N1 = geo_i.N;
-		e1 = geo_i.e;
-		T1 = geo_i.T;
-
-
-		GMSH::Mesh mesh1(m1_msh);
-
-		j = { 0 };
-		for (auto m2 : list_maillages)
-		{
-			std::string m2_msh = m2 + ".msh";
-			std::string m2_geo = m2 + ".geo";
-
-
-			geo_j.surfaceNumber = j;
-			N2 = geo_j.N;
-			e2 = geo_j.e;
-			T2 = geo_j.T;
-
-
-			GMSH::Mesh mesh2(m2_msh);
-
-			if (j < i)
-			{
-				//std::cout << "\t area1 = " << mesh1.area << "\t area2 = " << mesh2.area << "\n";
-				f12.value = MAT_VF.getValue(j, i) * (mesh1.area / mesh2.area);
-				f12.emitterNumber = { i }; f12.receiverNumber = { j };
-				f12.numberOfElements1 = mesh1.num_total_elements;
-				f12.numberOfElements2 = mesh2.num_total_elements;
-				f12.area1 = mesh1.area;
-				f12.area2 = mesh2.area;
-				MAT_VF.setValue(i, j, f12.value);
-
-
-				std::cout << f12 << "\n";
-				//std::system("PAUSE");
-				std::this_thread::sleep_for(std::chrono::milliseconds(2500));//pause de 2000 ms
-
-
-
-				Q_rad.Fij = Q_rad.radiation(f12.value);
-				MAT_Q.setValue(i, j, Q_rad.Fij);
-				std::cout << Q_rad << "\n";
-
-			}
-			j++;
-
-		}
-		i++;
-	}
-	*/
-
-
-
-
-	for (int i = 0; i < MAT_VF.rowSize(); i++)
-	{
-		double sum_j = { 0.0 };
-		for (int j = 0; j < MAT_VF.columnSize(); j++)
-		{
-			if (i != j)
-			{
-				sum_j += MAT_VF.x[i][j];
-			}
-		}
-		MAT_VF.x[i][i] = std::abs(1.0 - sum_j);
-	}
-
-
-
-
-
-	/* AFFICHAGE de la MATRICE des FACTEURS de VUE avant RENORMALISATION */
-	/*
-	std::cout << "\n\n";
-	std::cout << "\t\t\t***********************************\n";
-	std::cout << "\t\t\t        VIEW FACTOR MATRIX         \n";
-	std::cout << "\t\t\t***********************************\n";
-	std::cout << "\n\n";
-	std::cout << MAT_VF << "\n";
-	*/
-
-
-
-
-	std::cout << "\n\n\t\tCREATING VIEW FACTOR MATRIX IS COMPLETE !\n\n";
-	std::this_thread::sleep_for(std::chrono::milliseconds(2000));//pause de 2000 ms
-
-
-	std::system("cls");
-	/*
-	std::system("PAUSE");
-
-	*/
-
-
-
-
-
-
-
-
-
-	/* RENORMALISATION des FACTEURS de VUE (pour garantir la conservation de l'énergie - CF CGHATGPT) */
-	for (int i = 0; i < MAT_VF.rowSize(); i++)
-	{
-		double value = { 0.0 };
-		for (int j = 0; j < MAT_VF.columnSize(); j++)
-		{
-			value = MAT_VF.getValue(i, j) / MAT_VF.sumOfLineElement(i);
-			MAT_VF.setValue(i, j, value);
-		}
-	}
-
-
-
-
-	//std::this_thread::sleep_for(std::chrono::milliseconds(2000));//pause de 2000 ms
-	std::cout << "\n\n\t\tRENORMALIZATION OF VIEW FACTOR IS DONE !\n\n";
-	std::this_thread::sleep_for(std::chrono::milliseconds(2000));//pause de 2000 ms
-
-
-
-
-	std::system("cls");
-
-
-
-
-	/* AFFICHAGE de la MATRICE des FACTEURS de VUE aprés RENORMALISATION */
-	std::cout << "\n\n";
-	std::cout << "\t\t\t***********************************\n";
-	std::cout << "\t\t\t        VIEW FACTOR MATRIX (N)     \n";
-	std::cout << "\t\t\t***********************************\n";
-	//std::cout << "\t\t" << folder << "\n\n";
-	//std::cout << "\n\n";
-	std::cout << MAT_VF << "\n";
-
-
-
-	/*
-	std::system("PAUSE");
-	std::system("cls");
-	*/
-
-
-
-
-	/* ECRITURE de la MATRICE des FACTEURS de VUE dans un FICHIER */
-	fic = { "View_Factor_Matrix_" }, ext = { ".txt" };
-	filename = pathname + fic + folder + ext;
-	printFile(MAT_VF, filename, z);
-
-
-	std::cout << "\n\n\t\tWRITING VIEW FACTOR MATRIX TO FILE IS DONE !\n\n";
-	std::this_thread::sleep_for(std::chrono::milliseconds(2000));//pause de 2000 ms
-
-
-
 
 	std::system("PAUSE");
 	std::system("cls");
-
-
-	
-
-
-	
-
-
-
-
 
 
 

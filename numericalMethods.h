@@ -47,11 +47,11 @@ namespace methods
 
 					Matrix<T> mat_A2(m, n, 0);
 					Matrix<T> vec_b2(m, 1, 0);
-					for (size_t k = 0; k < m; k++)
+					for (int k = 0; k < m; k++)
 					{
-						for (size_t i = k + 1; i < m; i++)
+						for (int i = k + 1; i < m; i++)
 						{
-							for (size_t j = k + 1; j < n; j++)
+							for (int j = k + 1; j < n; j++)
 							{
 								dble val_A2 = mat_A1.getValue(i, j) - (mat_A1.getValue(i, k) / mat_A1.getValue(k, k)) * mat_A1.getValue(k, j);
 								mat_A2.setValue(i, j, val_A2);
@@ -64,9 +64,9 @@ namespace methods
 
 						//les valeurs de la matrice A(k+1) sont les memes que celles de la matrice A(k) 
 						//les valeurs du vecteur    b(k+1) sont les memes que celles du vecteur    b(k)
-						for (size_t i = 0; i < k + 1; i++)
+						for (int i = 0; i < k + 1; i++)
 						{
-							for (size_t j = k; j < n; j++)
+							for (int j = k; j < n; j++)
 							{
 								dble val_A1 = mat_A1.getValue(i, j);
 								mat_A2.setValue(i, j, val_A1);
@@ -96,10 +96,190 @@ namespace methods
 			};
 
 
+
+
+
+			template<typename T>
 			class LU
 			{
 			private:
 			public:
+				Matrix<T> A;
+				Matrix<T> b, x;
+				LU(Matrix<T>& AA, Matrix<T>& bb, Matrix<T>& xx) : A(AA), b(bb), x(xx)
+				{
+					std::cout << "\n\tLa solution x du systeme A*x = b est: " << "\n";
+					solve2();
+				}//end LU
+				LU& operator=(const LU<T>& lu) = default;
+				void solve()
+				{
+
+					int m = A.getRows();
+					int n = A.getCols();
+					assert(m == n);//matrice carree
+					Matrix<T>x(n, 1, 0);
+
+					Matrix<T> L(m, n, 0), U(m, n, 0);//init
+
+					//initialisation
+					L = L.eye();
+					L.print("L=");
+					U = A;
+					U.print("U=");
+
+					//factorisation
+					for (int i = 0; i < m; i++)
+					{
+						for (int j = 0; j < i; j++)
+						{
+							double sum_k = 0;
+							for (int k = 0; k < i; k++)
+							{
+								sum_k += L.getValue(i, k) * U.getValue(k, j);
+							}
+							double val_L = (A.getValue(i, j) - sum_k) / U.getValue(i, i);
+							L.setValue(i, j, val_L);
+						}
+					}
+					L.print("L=");
+
+					//màj de U
+					for (int i = 0; i < m; i++)
+					{
+						for (int j = 0; j > i-1; j++)
+						{
+							double sum_k = 0;
+							for (int k = 0; k < i; k++)
+							{
+								sum_k += L.getValue(i, k) * U.getValue(k, j);
+							}
+							double val_U = A.getValue(i, j) - sum_k;
+							U.setValue(i, j, val_U);
+						}
+					}
+					U.print("U=");
+
+
+
+					x.print("x=");
+
+				}
+
+
+
+
+				void solve2()
+				{
+					int m = A.getRows();
+					int n = A.getCols();
+					assert(m == n);//matrice carree
+					Matrix<T>x(n, 1, 0);
+
+					Matrix<T> L(m, n, 0), U(m, n, 0);//init
+
+					for (int j = 0; j < n; j++)
+					{
+						double val = A.getValue(0, j);
+						U.setValue(0, j, val);
+					}
+
+					for (int i = 0; i < m; i++)
+					{
+						double val = A.getValue(i, 0) / U.getValue(0, 0);
+						L.setValue(i, 0, val);
+					}
+
+					for (int i = 0; i < m; i++)
+					{
+						L.setValue(i, i, 1);
+					}
+
+					for (int i = 0; i < m; i++)
+					{
+						for (int j = i + 1; j < n; j++)
+						{
+							L.setValue(i, j, 0);
+						}
+					}
+					L.print("L=");
+
+					for (int i = 0; i < m; i++)
+					{
+						for (int j = 0; j < i; j++)
+						{
+							U.setValue(i, j, 0);
+						}
+					}
+
+					for (int i = 0; i < m; i++)
+					{
+						for (int j = 0; j < n; j++)
+						{
+							double sum = 0;
+							for (int k = 0; k < i; k++)
+							{
+								sum += L.getValue(i, k) * U.getValue(k, j);
+							}
+							double val_U = (A.getValue(i, j) - sum);
+							U.setValue(i, j, val_U);
+						}
+					}
+					
+					for (int i = 0; i < m; i++)
+					{
+						for (int j = i; j < n; j++)
+						{
+							double sum = 0;
+							for (int k = 0; k < j; k++)
+							{
+								sum += L.getValue(i, k) * U.getValue(k, j);
+							}
+							double val_L = (A.getValue(i, j) - sum) / U.getValue(j, j);
+							L.setValue(i, j, val_L);
+						}
+					}
+					
+					// on "remonte" les x 
+					Matrix<T>y = b;		
+					Matrix<T> z(n, 1, 0);
+
+
+					double val_z0 = y.getValue(0, 0) / L.getValue(0, 0);
+					z.setValue(0, 0, val_z0);
+					z.setValue(0, 0, y.getValue(0, 0));
+
+					double val_L = 0, val_U = 0, som_j;
+					for (int i = 1; i < m; i++)
+					{
+						som_j = 0;
+						for (int j = 0; j < i; j++)
+						{
+							som_j += L.getValue(i, j) * z.getValue(j, 0);
+						}
+						val_L = y.getValue(i, 0) - som_j;
+						z.setValue(i, 0, val_L);
+					}
+
+					double val_xn = z.getValue(n - 1, 0) / U.getValue(n - 1, n - 1);
+					x.setValue(n - 1, 0, val_xn);
+					
+					for (int p = n - 2; p >= 0; p--)
+					{
+						double sum_q = 0;
+						for (int q = p + 1; q < n; q++)
+						{
+							sum_q += U.getValue(p, q) * x.getValue(q, 0);
+						}
+						double val = (z.getValue(p, 0) - sum_q) / U.getValue(p, p);
+						x.setValue(p, 0, val);
+					}					
+
+					x.print("x=");
+					
+				}
+
+
 			};//end class LU
 
 		}//end method directe
@@ -208,19 +388,13 @@ namespace methods
 			private:
 			public:
 				double tolerance{ 1.e-9 };
-				int max_iter{ 100 };
+				int max_iter{ 100 }, iter;
 				Matrix<T> A;
-				Matrix<T> b, x;
+				Matrix<T> b, x, x1, x2, x21;
 				Jacobi(Matrix<T>& AA, Matrix<T>& bb, Matrix<T> xx) :A(AA), b(bb), x(xx)
 				{
-					std::cout << "\n\tLa solution x du systeme A*x = b est: " << "\n";
-					solve();
-				}
-				virtual void solve()
-				{
-					int m = A.getRows();
-					int n = A.getCols();
-					for (size_t i = 0; i < A.getRows(); i++)
+					/*
+					for (int i = 0; i < A.getRows(); i++)
 					{
 						if (!A.isDiagonalDominant(i))
 						{
@@ -228,8 +402,53 @@ namespace methods
 							std::system("pause");
 							std::exit(1);
 						}
-					}
+					}*/
+					std::cout << "\n\tLa solution x du systeme A*x = b est: " << "\n";
+					solve();
 				}
+				virtual void solve()
+				{					
+					int m = A.getRows();
+					int n = A.getCols();
+					Matrix<T> x1(n,1,0), x2(n,1,0), x21(n,1,0);
+
+					x1 = this->x;
+					double delta = 1e9;
+					iter = 0;
+					while (delta > this->tolerance)
+					{
+
+						for (int i = 0; i < m; i++)
+						{
+							double sum_j = { 0 };
+							for (int j = 0; j < n; j++)
+							{
+								if (j != i)
+								{
+									sum_j += this->A.getValue(i, j) * x1.getValue(j, 0);
+								}								
+							}
+							double val = (this->b.getValue(i, 0) - sum_j) / this->A.getValue(i, i);
+							x2.setValue(i, 0, val);
+						}
+
+						if (iter > this->max_iter)
+						{
+							std::cout << "\tnombre iteration max est depasse !" << "\n";
+							break;
+						}
+						x21 = x2 - x1;
+						/*MàJ*/
+						delta = x21.normL2();
+						x1 = x2;
+						iter++;	
+
+					}//end while
+
+					//std::cout << iter << "\n";
+					x1.print("x=");
+
+				}//end solve
 			};//end class Jacobi
 
 		}

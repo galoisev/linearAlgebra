@@ -150,7 +150,7 @@ public:
     bool isHessenberg();//todo
     bool isToeplitz();//todo
 
-    bool isDiagonalDominant(size_t& i);
+    bool isDiagonalDominant(int& i);
 
     Matrix<T> renormalization();
 
@@ -231,11 +231,11 @@ Matrix<T>& Matrix<T>::operator=(const Matrix<T>& mat)
 
 
 template<typename T>
-bool Matrix<T>::isDiagonalDominant(size_t& i)
+bool Matrix<T>::isDiagonalDominant(int& i)
 {
     bool test = { true };//on suppose que la matrice A est a diagonal dominante !
     T sum_j{ 0.0 };
-    for (size_t j = 0; j < this->getCols(); j++)
+    for (int j = 0; j < this->getCols(); j++)
     {
         if (i != j)
         {
