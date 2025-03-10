@@ -21,6 +21,7 @@ namespace LINALG
 		virtual void allocationMemory() = 0;
 		virtual ~Tensor() {} //destructeur vituel nécessaire
 
+
 	};//end class cirtual Tensor
 
 
@@ -109,6 +110,13 @@ namespace LINALG
 		}
 
 
+		friend std::ostream& operator<<(std::ostream& f, const Vector<T>& tvec)
+		{
+			f << "\n";
+			return f;
+		}
+
+
 	};//end class Vector
 
 
@@ -159,6 +167,16 @@ namespace LINALG
 
 
 		auto operator<=>(const Matrix<T>& mat)const = default;
+
+
+
+		friend std::ostream& operator<<(std::ostream& f, const Matrix<T>& mat)
+		{
+			f << "\n";
+			return f;
+		}
+
+
 	};
 
 

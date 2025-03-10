@@ -648,8 +648,8 @@ int	main(void)
 
 
 	
-	enum METHNUM {PIVOT=1, DICO=2, NEWTONRAPH=3, GC=4, JACOBI=5, LU=6, DEFAULT};
-	switch (JACOBI)
+	enum METHNUM {PIVOT=1, DICO=2, NEWTONRAPH=3, GC=4, JACOBI=5, LU=6, PUISS_ITER=100, DEFAULT};
+	switch (PUISS_ITER)
 	{
 		case 1:
 		{
@@ -745,9 +745,9 @@ int	main(void)
 			X.print("X0 = ");			
 			*/			
 			Matrix<dble> A(3, 3, 0), B(3, 1, 0), X(3, 1, 0);
-			A.setValue(0, 0, 4); A.setValue(0, 1, 2); A.setValue(0, 2, 1);
-			A.setValue(1, 0,-1); A.setValue(1, 1, 2); A.setValue(1, 2, 0);
-			A.setValue(2, 0, 2); A.setValue(2, 1, 1); A.setValue(2, 2, 4);
+			A.setValue(0, 0, 1); A.setValue(0, 1, 1); A.setValue(0, 2, 0);
+			A.setValue(1, 0, 0); A.setValue(1, 1, 2); A.setValue(1, 2, 0);
+			A.setValue(2, 0, 0); A.setValue(2, 1,-1); A.setValue(2, 2, 3);
 			A.print("A=");
 			B.setValue(0, 0, 4);
 			B.setValue(1, 0, 2);
@@ -758,6 +758,22 @@ int	main(void)
 			X.setValue(2, 0, 0);
 			X.print("X0 = ");						
 			methods::systLin::direct::LU<dble> lu(A, B, X);
+			break;
+		}
+		case 100:
+		{
+			std::cout << "\n\tpuissances iterees: " << "\n";
+			Matrix<dble> A(3, 3, 0), X(3, 1, 0);
+			A.setValue(0, 0, 1); A.setValue(0, 1, 1); A.setValue(0, 2, 0);
+			A.setValue(1, 0, 0); A.setValue(1, 1, 2); A.setValue(1, 2, 0);
+			A.setValue(2, 0, 0); A.setValue(2, 1, -1); A.setValue(2, 2, 3);
+			A.print("A=");
+			X.setValue(0, 0, 0);
+			X.setValue(1, 0, 1);
+			X.setValue(2, 0, 0);
+			X.print("X=");
+			methods::eigenValues::PuissancesIterees<dble> puis_iter(A, X);
+
 			break;
 		}
 		default:

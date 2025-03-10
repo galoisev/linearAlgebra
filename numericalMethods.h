@@ -3,10 +3,189 @@
 
 #include "array_class.h"
 #include <typeinfo>
+#include <map>
 
 
 namespace methods
 {
+
+
+
+	namespace eigenValues
+	{
+		template<typename T>
+		class SubMethods
+		{
+		public:
+			virtual void solve() = 0;
+		};
+
+
+
+
+		template<typename T>
+		class PuissancesIterees:public SubMethods<T>
+		{
+		private:
+			double tolerance = { 1e-9 };
+		public:
+			Matrix<T> A;
+			Matrix<T> x;
+
+			PuissancesIterees(Matrix<T>& AA, Matrix<T> xx) :A(AA),x(xx)
+			{
+				std::cout << "\n\tRecherche des valeurs propres de la matrice: " << "\n";
+				solve();
+			}	
+
+
+			double getTolerance()const
+			{
+				return tolerance;
+			}
+
+
+			virtual void solve()
+			{
+				int m = A.getRows();
+				int n = A.getCols();
+				assert(m == n);//A est une matrice carrée !
+
+				//1 
+				Matrix<T>V(n, 1, 1);//initialisation du vecteur V1.
+				V = x;
+				std::cout << "\n\n\tVecteur arbitraire: \n";
+				std::cout << V << "\n\n";
+				//2
+				Matrix<T>U1(m, 1, 0), W1(m, 1, 0);
+
+				//recherche de la composante le plus grande du vecteur U1.
+				double valMax{ 1e-9 };				
+				double k1 = { 1.e12 }, k2 = { 0. };
+				
+
+				double delta_k = std::abs(k2 - k1);
+				int iter = 0;
+				while (delta_k > this->getTolerance())
+				{
+					U1 = A * V;
+					valMax = 1e-9;
+					for (int i = 0; i < m; i++)
+					{
+						if ( std::abs( U1.getValue(i, 0) ) > valMax )
+						{
+							valMax = U1.getValue(i, 0);
+						}
+					}
+					k1 = valMax;
+
+					//normalisation du vecteur U1.
+					W1 = U1 / k1;
+
+					//std::cout << W1 << "\n\n";
+					delta_k = std::abs(k2 - k1);
+					if (iter > 1000)
+					{
+						std::cerr << "\tPAS de CV: nombre iteration max depassee !\n";
+						std::system("pause");
+						std::exit(1);
+					}						
+
+					//MàJ
+					iter++;
+					k2 = k1;
+					k1 = 1.e12;
+					V = W1;
+
+				}//end while
+
+
+				/*
+				template<class T, class U>
+				void results2(const std::map<T, U>&mresults, std::string & filename)
+				{
+					std::ofstream fic(filename);
+					for (const auto& [key, value] : mresults)
+					{
+						fic << key << ";" << value << "\n";
+					}
+					fic.close();
+					std::cout << "\tWriting (summary of view factor calculations) to the file is COMPLETE !   " << filename << std::endl;
+				}
+
+				void print_map(std::string comment, const std::map<T, U>& m)
+				{
+					std::cout << comment << "\n";
+					// Iterate using C++17 facilities
+					for (const auto& [key, value] : m)
+						std::cout << '[' << key << "] = " << value << "; ";
+				}*/
+				// C++11 alternative:
+//  for (const auto& n : m)
+//      std::cout << n.first << " = " << n.second << "; ";
+//
+// C++98 alternative:
+//  for (std::map<std::string, int>::const_iterator it = m.begin(); it != m.end(); ++it)
+//      std::cout << it->first << " = " << it->second << "; ";
+
+				
+				double eigenValue = k2;
+				std::cout << "\n\n\titer : " << iter << "\n";
+				std::cout << "\tvaleur propre: " << eigenValue << "\n";
+				std::cout << "\tvecteur propre associe:\n";
+				std::cout << W1 << "\n\n";
+
+				
+				std::map<double, Matrix<double>> m_dmat = {};
+				std::map<int, std::map<double, Matrix<double>>> mm_dmat = {};
+				m_dmat[eigenValue] = W1;
+				mm_dmat[1] = m_dmat;
+
+				for (auto& [num, m] : mm_dmat)
+				{
+					std::cout << "\t" << num << "\n";
+					for (auto& [x, w] : m)
+					{
+						std::cout << "\tvalueur propre: " << x << ", vecteur propre: " << w << "\n";
+					}
+					std::cout << "\n";
+					//std::cout << key << "," << val << "\n";
+				}
+				//std::map<int, std::map<double,Matrix<double>>> map_map_vecPropre = {};
+
+                /*
+				map_map_vecPropre[1] = W1;
+				for (auto& [key, m] : mm)
+				{
+					for (auto& [val_prop, vec_prop] : map_val_vec)
+					{
+						std::cout <<  "\t" << key << " : " << ", val. propre: " << val_prop << ", vect. propre associé: " << vec_prop << "\n";
+					}
+					
+				}
+				*/
+				/*
+				for (const auto& [id, x] : map_vecPropre)
+				{
+					std::cout << "\valeurPropre n°: " << id << " valeur_propre: \n";
+					std::cout << x << "\n";
+				}*/
+				
+
+			}
+
+
+
+
+		};
+
+	}//end namespace eigenValues
+
+
+
+
+
+
 
 	namespace systLin
 	{
